@@ -40,6 +40,10 @@ struct dirent *readdir(DIR *dirp);
 int chdir(const char *path);
 void cdfs_init(void);
 void cdfs_reinit(void);
+
+int play_cdda_tracks(int start, int stop, int reps);
+int play_cdda_sectors(int start, int stop, int reps);
+int stop_cdda(void);
 END_EXTERN_C
 
 #endif //_CDFS_H

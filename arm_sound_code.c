@@ -39,6 +39,10 @@ void aica_reset()
     hwptr += 32;
   }
 
+  /* Enable CDDA full volume, normal panning */
+  *AICA(0x2040) = 0x0f0f;
+  *AICA(0x2044) = 0x0f1f;
+
   *AICA(0x2800) = 15;
 }
 

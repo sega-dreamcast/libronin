@@ -243,3 +243,19 @@ EXTERN_C void cdfs_init()
 EXTERN_C void cdfs_reinit()
 {
 }
+
+EXTERN_C int play_cdda_tracks(int start, int stop, int reps)
+{
+  return -1;
+}
+
+EXTERN_C int play_cdda_sectors(int start, int stop, int reps)
+{
+  return -1;
+}
+
+EXTERN_C int stop_cdda(void)
+{
+  return -1;
+}
+

@@ -188,6 +188,35 @@ static int read_cached_sector(unsigned char **buf, int sec)
 }
 
 /*
+ * CDDA
+ */
+
+int play_cdda_tracks(int start, int stop, int reps)
+{
+  struct { int start, stop, reps, dunno; } param;
+  param.start = start;
+  param.stop = stop;
+  param.reps = reps;
+  param.dunno = 0;
+  return exec_cmd(20, (void *)&param);
+}
+
+int play_cdda_sectors(int start, int stop, int reps)
+{
+  struct { int start, stop, reps, dunno; } param;
+  param.start = start;
+  param.stop = stop;
+  param.reps = reps;
+  param.dunno = 0;
+  return exec_cmd(21, (void *)&param);
+}
+
+int stop_cdda()
+{
+  return exec_cmd(22, NULL);
+}
+
+/*
  * ISO9660 support functions
  */
 
