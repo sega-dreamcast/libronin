@@ -69,15 +69,3 @@ struct soundstatus {
 #endif
 
 #define STEREO_OFFSET (RING_BUFFER_SAMPLES+256)
-
-#if SAMPLE_MODE == 0
-#define RING_BUF ((short *)(void *)(0xa0800000+RING_BASE_ADDR))
-#else
-#define RING_BUF ((signed char *)(void *)(0xa0800000+RING_BASE_ADDR))
-#endif
-
-#if SAMPLE_MODE == 0
-extern short temp_sound_buffer[2*RING_BUFFER_SAMPLES];
-#else
-extern signed char temp_sound_buffer[2*RING_BUFFER_SAMPLES];
-#endif

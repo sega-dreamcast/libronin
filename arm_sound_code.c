@@ -2,6 +2,12 @@
 
 #define AICA(n) ((volatile unsigned int *)(void*)(0x800000+(n)))
 
+#if SAMPLE_MODE == 0
+#define RING_BUF ((short *)(void *)(RING_BASE_ADDR))
+#else
+#define RING_BUF ((signed char *)(void *)(RING_BASE_ADDR))
+#endif
+
 #define SOUNDSTATUS ((volatile struct soundstatus *)(void *)(SOUNDSTATUS_ADDR))
 
 static void __gccmain() { }

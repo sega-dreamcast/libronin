@@ -15,10 +15,7 @@ CRT0=crt0.o
 LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(CRT0) $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
 
 
-CCFLAGS = $(OPTIMISE) $(CPUFLAGS) \
-	-I. \
-
-#-DNOSERIAL
+CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. -DNOSERIAL
 
 CFLAGS=$(CCFLAGS)
 
@@ -68,7 +65,7 @@ arm_startup.o: arm_startup.s
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec
 
 .c.elf: libronin.a crt0.o Makefile
-	$(CC) -Wl,-Ttext=0x8c020000 $*.c  $(LINK)
+	$(CC) -Wl,-Ttext=0x8c020000 $*.c $(LINK)
 
 .c.srec: libronin.a crt0.o Makefile
 	$(CC) -Wl,-Ttext=0x8c020000,--oformat,srec $*.c  $(LINK)

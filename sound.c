@@ -4,6 +4,12 @@
 struct buffer buff;
 #include "arm_sound_code.h"
 
+#if SAMPLE_MODE == 0
+#define RING_BUF ((short *)(void *)(0xa0800000+RING_BASE_ADDR))
+#else
+#define RING_BUF ((signed char *)(void *)(0xa0800000+RING_BASE_ADDR))
+#endif
+
 void *memcpy4(void *s1, const void *s2, unsigned int n)
 {
   unsigned int *p1 = s1;
