@@ -111,8 +111,3 @@ void stop_sound()
 
 int sound_device_open = 0;
 
-#if SAMPLE_MODE == 0
-short temp_sound_buffer[2*RING_BUFFER_SAMPLES];
-#else
-signed char temp_sound_buffer[2*RING_BUFFER_SAMPLES];
-#endif
