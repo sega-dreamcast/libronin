@@ -40,7 +40,7 @@ typedef struct dirent {
 START_EXTERN_C
 int open(const char *path, int oflag, ...);
 int close(int fd);
-int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset);
+int pread(int fd, void *buf, unsigned int nbyte, long offset);
 int read(int fd, void *buf, unsigned int nbyte);
 long int lseek(int fd, long int offset, int whence);
 DIR *opendir(const char *dirname);

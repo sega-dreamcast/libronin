@@ -378,7 +378,7 @@ int file_size( int fd ) /* hm */
   return fh[fd-MIN_FD].len;
 }
 
-int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset)
+int pread(int fd, void *buf, unsigned int nbyte, long offset)
 {
   int r, t;
   if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD)
