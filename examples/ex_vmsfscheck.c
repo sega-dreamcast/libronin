@@ -135,7 +135,6 @@ void write_sram( unsigned char *data, int size )
 
 void restore_sram( )
 {
-  char *point;
   int i;
   unsigned int cards = 0;
 
@@ -152,18 +151,18 @@ void restore_sram( )
         report("No vmsfschk.tmp found on this unit.\n");
 	continue;
       }
-      if(strncmp(file.header.id, "vmsfscheck", 16) != 0)
-        reportf("Incorrect id '%s'.\n", file.header.id);        
-      if(strncmp(file.header.longdesc, "Delete this file", 32) != 0)
+      if(strncmp(file.header.id, "vmsfscheck", 16)) {
+        reportf("Incorrect id '%s'.\n", file.header.id);  
+        continue;
+      }
+      if(strncmp(file.header.longdesc, "Delete this file", 32)) {
         reportf("Incorrect longdesc '%s'.\n", file.header.longdesc);
-      if(file.size > 0x10000)
+        continue;
+      }
+      if(file.size > 0x10000) {
         reportf("File to big '%d'.\n", file.size);
-        
-      if(strncmp(file.header.id, "vmsfscheck", 16) != 0
-         || strncmp(file.header.longdesc, 
-                    "Delete this file", 32) != 0
-         || file.size > 0x10000)
-	continue;
+        continue;
+      }        
 
       reportf("File size is %d\n", file.size);
 
@@ -188,29 +187,28 @@ int main(int argc, char **argv)
 
   SRAM = malloc(SRAMSIZE);
   RESTOREDRAM = malloc(SRAMSIZE);
-  for(i=0; i<256; i?i=i<<1:i++) {
-    reportf("\nSaving %dB %d's ...\n", SRAMSIZE, i);
-    memset(SRAM, i, SRAMSIZE);
-    for(x=0; x<SRAMSIZE; x++) {
-      if(SRAM[x] != i) {
-        reportf("\nVerification of original failed at count %d!\n", x);
-        break;
-      }
-    }
-    write_sram( SRAM, SRAMSIZE );
-
-    report("Saved. Restoring ...\n");
-    restore_sram();
-    report("\nRestored.\n");
-    for(x=0; x<SRAMSIZE; x++) {
-      if(RESTOREDRAM[x] != i) {
-        reportf("\nVerification failed at count %d!\n", x);
-        break;
-      }
+  i=0xF1;
+  reportf("\nSaving %dB %d's ...\n", SRAMSIZE, i);
+  memset(SRAM, i, SRAMSIZE);
+  for(x=0; x<SRAMSIZE; x++) {
+    if(SRAM[x] != i) {
+      reportf("\nVerification of original failed at count %d!\n", x);
+      break;
     }
   }
-  //  free(SRAM);
-  //  free(RESTOREDRAM);
+  write_sram( SRAM, SRAMSIZE );
+  
+  report("Saved. Restoring ...\n");
+  restore_sram();
+  report("\nRestored.\n");
+  for(x=0; x<SRAMSIZE; x++) {
+    if(RESTOREDRAM[x] != i) {
+      reportf("\nVerification failed at count %d!\n", x);
+      break;
+    }
+  }
+  free(SRAM);
+  free(RESTOREDRAM);
 
   return 0;
 }
