@@ -78,23 +78,30 @@ string process_command(int ser, int cmd, string data)
   case 1:
     fd = generate_fd();
     Stdio.File f = Stdio.File();
-    if(f->open(fixfn(data), "r")) {
+    if(file_stat(fixfn(data)) && !file_stat(fixfn(data))->isdir &&  f->open(fixfn(data), "r")) {
       fds[fd] = f;
       return bottle_answer(ser, fd);
-    } else
-      return bottle_answer(ser, -2);
+    }
+    else
+    {
+	werror("Failed to open %s\n", fixfn(data));
+	return bottle_answer(ser, -2);
+    }
   case 2:
     if(sscanf(data, "%-4c%-4c%-4c", fd, pos, len)==3 &&
        fds[fd] && objectp(fds[fd]) && fds[fd]->seek(pos)>=0 &&
        (data = fds[fd]->read(len)))
-      return bottle_answer(ser, sizeof(data), data); 
+    {
+// 	werror("read(%d,%d,%d)->%d\n", fd, len,pos,sizeof(data));
+	return bottle_answer(ser, sizeof(data), data); 
+    }
     else
       return bottle_answer(ser, -2);
   case 3:
     if(sscanf(data, "%-4c", fd)==1 &&
        fds[fd] && objectp(fds[fd]) && fds[fd]->close()) {
       m_delete(fds, fd);
-      return bottle_answer(ser, 0);      
+      return bottle_answer(ser, 0);
     } else
       return bottle_answer(ser, -2);
   case 4:
@@ -105,12 +112,15 @@ string process_command(int ser, int cmd, string data)
       //werror("Dir: %O\n", Array.map(dir, upper_case));
       return bottle_answer(ser, fd);
     } else
+    {
+	werror("Failed to read dir %s\n", fixfn(data));
       return bottle_answer(ser, -2);
+    }
   case 5:
     if(sscanf(data, "%-4c", fd)==1 &&
        fds[fd] && arrayp(fds[fd])) {
       m_delete(fds, fd);
-      return bottle_answer(ser, 0);      
+      return bottle_answer(ser, 0);
     } else
       return bottle_answer(ser, -2);
   case 6:
@@ -120,12 +130,15 @@ string process_command(int ser, int cmd, string data)
        (st=file_stat(combine_path(fds[fd][0], fds[fd][pos+1])))) {
       return bottle_answer(ser, 0, sprintf("%-4c%s", st[1], fds[fd][pos+1]));
     } else
+    {
+      werror("[getdir] No file %O %O\n", combine_path(fds[fd][0], fds[fd][pos+1]));
       return bottle_answer(ser, -2);
+    }
   case 7:
     string newcwd = fixfn(data);
     if(file_stat(newcwd)) {
       cwd = newcwd;
-      return bottle_answer(ser, 0);      
+      return bottle_answer(ser, 0);
     } else
       return bottle_answer(ser, -2);
   case 8:
@@ -172,6 +185,6 @@ int main()
 				   });
 
   signal(signum("SIGQUIT"), lambda() { write("[Open files: %d]\n", sizeof(fds)); });
-  
+
   return -17;
 }
