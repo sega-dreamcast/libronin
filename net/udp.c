@@ -1,6 +1,5 @@
 #include "udp.h"
 #include "util.h"
-#include "proto.h"
 
 static int udp_calc_checksum(unsigned short *pkt, int sz, void *ip_pkt)
 {
