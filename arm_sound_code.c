@@ -2,6 +2,8 @@
 
 #define AICA(n) ((volatile unsigned int *)(void*)(0x800000+(n)))
 
+#undef RING_BUF
+
 #if SAMPLE_MODE == 0
 #define RING_BUF ((short *)(void *)(RING_BASE_ADDR))
 #else
