@@ -99,7 +99,7 @@ int read_sound_int(volatile int *p)
   return *p;
 }
 
-static void write_sound_int(volatile int *p, int v)
+void write_sound_int(volatile int *p, int v)
 {
   while((*((volatile int *)(void *)0xa05f688c))&32);
   *p = v;
