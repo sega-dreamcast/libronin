@@ -1,5 +1,5 @@
-NETSERIAL = 1
-NETCD = 1
+NETSERIAL = 0
+NETCD = 0
 CCC = sh-elf-c++ -fno-rtti -fconserve-space
 CC = sh-elf-gcc -Wall
 LD = sh-elf-ld -EL
@@ -112,38 +112,45 @@ clean: cleanish
 	rm -f crt0.o
 	rm -f libronin.a 
 	rm -f libronin-noserial.a 
-	cd zlib && make clean
+	cd zlib && $(MAKE) clean
 
 examples: libronin.a $(EXAMPLES)
 
 ifeq "$(NETSERIAL)$(NETCD)" "00"
-DISTHEADERS=cdfs.h common.h dc_time.h gddrive.h gfxhelper.h gtext.h maple.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h
+DISTHEADERS=cdfs.h common.h dc_time.h gddrive.h gfxhelper.h gtext.h maple.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h lwipopts.h
 dist: $(DISTHEADERS) 
-	@make clean && \
-	make all && \
-	if [ `ar -t libronin-noserial.a|grep net|wc -l` = 0 -a \
-	     `ar -t libronin.a | grep net | wc -l` = 0 ]; then \
+	@$(MAKE) clean && \
+	$(MAKE) all && \
+	if [ `ar -t libronin-noserial.a|egrep 'net(cd|serial)'|wc -l` = 0 -a \
+	     `ar -t libronin.a | egrep 'net(cd|serial)' | wc -l` = 0 ]; then \
 		mkdir disttmp && mkdir disttmp/ronin && \
+		mkdir disttmp/ronin/include && mkdir disttmp/ronin/include/ronin && \
 		cp libronin.a disttmp/ronin && \
 		cp libronin-noserial.a disttmp/ronin && \
 		cp crt0.o disttmp/ronin && \
-		cp $(DISTHEADERS) disttmp/ronin && \
+		cp $(DISTHEADERS) disttmp/ronin/include/ronin && \
 		cp README disttmp/ronin && \
 		cp COPYING disttmp/ronin && \
 		cp zlib/README disttmp/ronin/ZLIB_README && \
 		cp zlib/libz.a disttmp/ronin && \
-		cp zlib/zlib.h disttmp/ronin && \
-		cp zlib/zconf.h disttmp/ronin && \
+		cp zlib/zlib.h disttmp/ronin/include && \
+		cp zlib/zconf.h disttmp/ronin/include && \
+		cp -R lwip/include/lwip disttmp/ronin/include/ && \
+		cp -R lwip/include/netif disttmp/ronin/include/ && \
+		cp -R lwip/include/ipv4/lwip disttmp/ronin/include/ && \
+		cp -R lwip/arch/dc/include/arch disttmp/ronin/include/ && \
+		cp -R lwip/arch/dc/include/netif disttmp/ronin/include/ && \
+		find disttmp -type d -a -name CVS -exec rm -rf {} \; && \
 		(cd disttmp && tar cvf - ronin) | gzip -c > ronin-dist.tar.gz && \
 		echo "remember to tag and bump version if you didn't already." && \
 		rm -rf disttmp; \
 	else \
-		echo "Parts of NET found in libs!"; \
+		echo "Parts of NETCD/NETSERIAL found in libs!"; \
 	fi;
 
 else
 dist:
-	@echo "You must disable NET!"
+	@echo "You must disable NETCD/NETSERIAL!"
 endif
 
 #RIS specific upload targets
