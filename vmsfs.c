@@ -1,3 +1,4 @@
+#include <string.h>
 #include "common.h"
 #include "maple.h"
 #include "vmsfs.h"
@@ -8,7 +9,18 @@ static unsigned int tmppkt[256];
 static unsigned char tmpblk[8192];
 static struct dir_iterator tmpiter;
 static struct dir_entry tmpentry;
+static int vmsfs_errno;
+static int ous_want;
+static int ous_have;
 
+#define VMSFS_EOUS     1  /* Out of space */
+#define VMSFS_ETRUNK   2  /* Out of blocks while writing. File trunkated. */
+#define VMSFS_EBLOCK   3  /* Failed to write block */
+#define VMSFS_ENODIR   4  /* Failed to locate a free dir entry */
+#define VMSFS_SYNCFAT  5  /* Failed to sync FAT */
+#define VMSFS_SYNCROOT 6  /* Failed to sync root block */
+#define VMSFS_ERDIR    7  /* Failed to read dir entry */
+#define VMSFS_EWDIR    8  /* Failed to write dir entry */
 
 static unsigned int read_belong(unsigned int *l)
 {
@@ -58,6 +70,39 @@ void vmsfs_timestamp_from_bcd(struct timestamp *tstamp, unsigned char *bcd)
   tstamp->minute = frombcd(bcd[5]);
   tstamp->second = frombcd(bcd[6]);
   tstamp->wkday = frombcd(bcd[7]);
+}
+
+/*! Returns string describing the last error.
+ *!
+ */
+char *vmsfs_describe_error()
+{
+  static char buf[60];
+
+  switch(vmsfs_errno)
+  {
+   case VMSFS_EOUS:
+     strcpy(buf, "Not enough space on VMU. Need ");
+     strcat(buf, itoa(ous_want));
+     strcat(buf, " blocks.");
+     return buf;
+   case VMSFS_ETRUNK:
+     return "FATAL: Out of blocks while writing! File trunkated!";
+   case VMSFS_EBLOCK:
+     return "Failed to write block.";
+   case VMSFS_ENODIR:
+     return "Failed to locate a free dir entry.";
+   case VMSFS_SYNCFAT:
+     return "Failed to sync FAT.";
+   case VMSFS_SYNCROOT:
+     return "Failed to sync root block.";
+   case VMSFS_ERDIR:
+     return "Failed to read dir entry.";
+   case VMSFS_EWDIR:
+     return "Failed to write dir entry.";
+   default:
+     return "Unknown error!";
+  }
 }
 
 /*! Returns 1 if a @[unit] can function as memcard.
@@ -189,7 +234,8 @@ int vmsfs_beep(struct vmsinfo *info, int on)
 
     //FIXME: Timer problem if docmd was done somewhere else within 15000µs?
     //(In reality we don't care. It's just a beep...)
-    if((res = maple_docmd(info->port, info->dev, MAPLE_COMMAND_SETCOND, 2, param))
+    if((res = maple_docmd(info->port, info->dev, MAPLE_COMMAND_SETCOND, 2, 
+                          param))
        && res[0] == MAPLE_RESPONSE_OK)
       return 1;
   }
@@ -282,10 +328,10 @@ int vmsfs_write_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr
       memcpy(tmppkt+2, ptr+(subblk<<2)*phase, subblk<<2);
       //FIXME: Timer problem if docmd was done somewhere else within 15000µs?
       if((res = maple_docmd(info->port, info->dev,
-			    MAPLE_COMMAND_BWRITE, subblk+2, tmppkt))==NULL ||
-	 res[0] != MAPLE_RESPONSE_OK)
+			    MAPLE_COMMAND_BWRITE, subblk+2, tmppkt))==NULL
+         || res[0] != MAPLE_RESPONSE_OK)
 	break;
-      usleep(10000);
+      usleep(15000); /* Upped from 10000 for speculative purposes. */
     }
     if(phase >= info->writecnt && vmsfs_verify_block(info, blk, ptr))
       return 1;
@@ -321,11 +367,17 @@ int vmsfs_sync_superblock(struct superblock *s)
 {
   if(s->fat_modified &&
      !vmsfs_write_block(s->info, s->info->fat_loc, s->fat))
+  {
+    vmsfs_errno = VMSFS_SYNCFAT;
     return 0;
+  }
   s->fat_modified = 0;
   if(s->root_modified &&
      !vmsfs_write_block(s->info, s->info->root_loc, s->root))
+  {
+    vmsfs_errno = VMSFS_SYNCROOT;
     return 0;
+  }
   s->root_modified = 0;
   return 1;
 }
@@ -410,9 +462,18 @@ int vmsfs_next_empty_dir_entry(struct dir_iterator *i, struct dir_entry *d)
 int vmsfs_write_dir_entry(struct dir_entry *d)
 {
   if(!vmsfs_read_block(d->dir->super->info, d->dblk, tmpblk))
+  {
+    vmsfs_errno = VMSFS_ERDIR;
     return 0;
+  }
   memcpy(tmpblk+d->dpos*0x20, d->entry, 0x20);
-  return vmsfs_write_block(d->dir->super->info, d->dblk, tmpblk);
+  if(!vmsfs_write_block(d->dir->super->info, d->dblk, tmpblk))
+  {
+    vmsfs_errno = VMSFS_EWDIR;
+    return 0;
+  }
+    
+  return 1;
 }
 
 int vmsfs_open_file(struct superblock *super, char *name,
@@ -580,6 +641,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
     vmsfs_open_dir(super, &tmpiter);
     if(!vmsfs_next_empty_dir_entry(&tmpiter, &tmpentry))
     {
+      vmsfs_errno = VMSFS_ENODIR;
       report("No empty dir entry found.\n");
       return 0;
     }
@@ -594,8 +656,11 @@ int vmsfs_create_file(struct superblock *super, char *name,
   tmpentry.entry[0x18] = blkcnt&0xff;
   tmpentry.entry[0x19] = (blkcnt>>8)&0xff;
   memset(tmpentry.entry+0x1a, 0, 6);
-  if(freecnt < blkcnt)
+  if(blkcnt > freecnt)
   {
+    vmsfs_errno=VMSFS_EOUS;
+    ous_want=blkcnt;
+    ous_have=freecnt;
     report("Not enough space left on device.\n");
     return 0;
   }
@@ -637,9 +702,8 @@ int vmsfs_create_file(struct superblock *super, char *name,
 	blkptr += n;
 	padsize -= n;
 	blkfill -= n;	
-      } else
-      {
-        report("An error of unknown type 1...\n");
+      } else {
+        report("Incorrect indata\n");
 	return 0;
       }
     }
@@ -647,7 +711,9 @@ int vmsfs_create_file(struct superblock *super, char *name,
     if(nextblk == 0xfffa || nextblk == 0xfffc) {
       if((currblk = vmsfs_find_free_block(super)) == 0xfffc)
       {
-        report("An error of unknown type 2...\n");
+        vmsfs_errno = VMSFS_ETRUNK;
+        report("FATAL: Out of allocatable blocks. File trunkated!"
+               " This should not happen.\n");
 	return 0;
       }
       else
@@ -664,7 +730,8 @@ int vmsfs_create_file(struct superblock *super, char *name,
       vmsfs_set_fat(super, lastblk, currblk);
     if(!vmsfs_write_block(super->info, currblk, tmpblk))
     {
-      report("An error of unknown type 3...\n"); //Joytech gets this.
+      vmsfs_errno = VMSFS_EBLOCK;
+      report("Failed to write block.\n"); //Joytech gets this.
       return 0;
     }
   }
@@ -675,7 +742,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
   }
   if(headersize || iconsize || eyesize || datasize || padsize)
   {
-    report("An error of unknown type 4...\n");
+    report("Incorrect indata. (2)\n");
     return 0;
   }
   return vmsfs_sync_superblock(super) && vmsfs_write_dir_entry(&tmpentry);

@@ -81,6 +81,7 @@ struct vms_file {
 };
 
 START_EXTERN_C
+char *vmsfs_describe_error();
 void vmsfs_timestamp_to_bcd(unsigned char *bcd, struct timestamp *tstamp);
 void vmsfs_timestamp_from_bcd(struct timestamp *tstamp, unsigned char *bcd);
 int vmsfs_check_unit(int unit, int part, struct vmsinfo *info);
