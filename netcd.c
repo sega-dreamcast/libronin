@@ -186,9 +186,9 @@ EXTERN_C struct dirent *readdir(DIR *dirp)
 EXTERN_C int chdir(const char *path)
 {
   int res;
-  printf("chdir(%s)\n", path);
+  /*  printf("chdir(%s)\n", path); */
   res = docmd(7, path, strlen(path));
-  printf("res = %d\n", res);
+  /* printf("res = %d\n", res); */
   return res;
 }
 
