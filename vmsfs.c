@@ -1,6 +1,8 @@
 #include "common.h"
 #include "maple.h"
 #include "vmsfs.h"
+#include "report.h"
+#include "dc_time.h"
 
 static unsigned int tmppkt[256];
 static unsigned char tmpblk[8192];
@@ -73,6 +75,7 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
   if(info->port<0 || info->port>3 || info->dev<0 || info->dev>5 || info->pt<0 || info->pt>255)
     return 0;
 
+  //FIXME: Timer problem if docmd was done somewhere else within 15000탎?
   res = maple_docmd(info->port, info->dev, MAPLE_COMMAND_DEVINFO, 0, NULL);
 
 #ifndef NOSERIAL
@@ -166,7 +169,7 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
   }
 }
 
-/*! Stops maple-units beeper if @[on] is zero, otherwise turns it on.
+/*! Starts maple-units beeper if @[on] is non-zero, otherwise turns it off.
  *! 
  *! Returns 1 on success.
  */
@@ -184,6 +187,8 @@ int vmsfs_beep(struct vmsinfo *info, int on)
     write_belong(&param[0], MAPLE_FUNC_CLOCK);
     write_belong(&param[1], (on? 0xc0800000 : 0));
 
+    //FIXME: Timer problem if docmd was done somewhere else within 15000탎?
+    //(In reality we don't care. It's just a beep...)
     if((res = maple_docmd(info->port, info->dev, MAPLE_COMMAND_SETCOND, 2, param))
        && res[0] == MAPLE_RESPONSE_OK)
       return 1;
@@ -206,6 +211,7 @@ int vmsfs_read_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr)
     for(phase = 0; phase < info->readcnt; phase++) {
       write_belong(&param[0], MAPLE_FUNC_MEMCARD);
       write_belong(&param[1], (info->pt<<24)|(phase<<16)|blk);
+      //FIXME: Timer problem if docmd was done somewhere else within 15000탎?
       if((res = maple_docmd(info->port, info->dev,
 			    MAPLE_COMMAND_BREAD, 2, param)) &&
 	 res[0] == MAPLE_RESPONSE_DATATRF && res[3] >= 2+(subblk>>2) &&
@@ -235,6 +241,7 @@ static int vmsfs_verify_block(struct vmsinfo *info, unsigned int blk, unsigned c
     for(phase = 0; phase < info->readcnt; phase++) {
       write_belong(&param[0], MAPLE_FUNC_MEMCARD);
       write_belong(&param[1], (info->pt<<24)|(phase<<16)|blk);
+      //FIXME: Timer problem if docmd was done somewhere else within 15000탎?
       if((res = maple_docmd(info->port, info->dev,
 			    MAPLE_COMMAND_BREAD, 2, param)) &&
 	 res[0] == MAPLE_RESPONSE_DATATRF && res[3] >= 2+(subblk>>2) &&
@@ -260,7 +267,6 @@ int vmsfs_write_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr
 {
   int retr, phase;
   unsigned char *res;
-  unsigned int param[2];
   int subblk = ((info->blocksz/info->writecnt)+3)>>2;
 
   if(subblk>253)
@@ -271,10 +277,10 @@ int vmsfs_write_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr
 
   for(retr = 0; retr < 5; retr++) {
     for(phase = 0; phase < info->writecnt; phase++) {
-      int wt = 100;
       write_belong(&tmppkt[0], MAPLE_FUNC_MEMCARD);
       write_belong(&tmppkt[1], (info->pt<<24)|(phase<<16)|blk);
       memcpy(tmppkt+2, ptr+(subblk<<2)*phase, subblk<<2);
+      //FIXME: Timer problem if docmd was done somewhere else within 15000탎?
       if((res = maple_docmd(info->port, info->dev,
 			    MAPLE_COMMAND_BWRITE, subblk+2, tmppkt))==NULL ||
 	 res[0] != MAPLE_RESPONSE_OK)
