@@ -68,6 +68,7 @@ struct _fb_devconfig{
   int   dc_vidx;		/* Screen start X */
   int   dc_vidy;		/* Screen start Y */
   int   dc_lace;		/* Interlace 1/0 */
+  int   dc_stripes;             /* render nostalgia stripes */
 
   //	struct rasops_info rinfo;
 };

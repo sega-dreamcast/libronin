@@ -130,6 +130,8 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
 
   volatile unsigned int *vbl = (volatile unsigned int *)(void *)0xa05f810c;
 
+  fb_devconfig.dc_stripes = tvmode;    
+
   while (!(*vbl & 0x01ff));
   while (*vbl & 0x01ff);
 
@@ -323,6 +325,8 @@ void dc_video_on()
 static void pvr_check_tvsys()
 {
   fb_devconfig.dc_tvsystem = (*(__volatile unsigned char *)0xa021a004) & 3;
+  
+  reportf("Display type: %d\n", fb_devconfig.dc_tvsystem);
 
   switch(fb_devconfig.dc_tvsystem) {
    case 1: // PAL
@@ -361,7 +365,9 @@ void store_q_clear(void *ptr, int cnt)
 void dc_reset_screen( int hires, int lace )
 {
   extern void store_q_clear(void *ptr, int cnt);
-  int i, tvmode=fb_devconfig.dc_tvsystem, cable = dc_check_cable();
+  int i, tvmode=fb_devconfig.dc_stripes, cable = dc_check_cable();
+
+  reportf("tvmode: %d\n", tvmode);
 
   fb_devconfig.dc_wid = 640 >> (hires?0:1);
   fb_devconfig.dc_ht  = 480 >> (lace?0:1);
@@ -377,7 +383,7 @@ void dc_reset_screen( int hires, int lace )
 
   if((cable&2) || lace)
     tvmode = 0;
-
+  
   if(tvmode) {
     /* Use texture based tvmode... */
     dispvar.overlay = 1;
@@ -396,6 +402,8 @@ void dc_reset_screen( int hires, int lace )
     hires = 1;
   }
 
+  /* When does this happen? if(tvmode) tvmode=0; above should prevent
+     this? */
   if(tvmode && lace) {
     dispvar.scnbot /= 2;
     lace = 0;
