@@ -5,6 +5,7 @@
 
 START_EXTERN_C
 char *language_name( int id );
+int language_id( char *what );
 int set_language( int language );
 int set_next_language( );
 extern int current_language;

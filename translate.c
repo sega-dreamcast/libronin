@@ -48,17 +48,23 @@ char *language_name( int id )
   return NULL;
 }
 
-static int language_id( char *what )
+int language_id( char *what )
 {
   int i;
   for( i = 0; i<next_language; i++ )
     if( !strcmp( languages[ i ].name, what ) )
       return i;
-  languages[ next_language ].name = what;
-  return next_language++;
+  return -1;
 }
 
-
+static int internal_language_id( char *what )
+{
+  int i = language_id(what);
+  if( i>= 0)
+    return i;
+  languages[ next_language ].name = what;
+  return next_language++;  
+}
 
 static struct translation
 {
@@ -166,7 +172,7 @@ void read_translations( char *buffer, int len )
     if( !strncmp( "lang ", line, 5 ) )
     {
       reportf( "New language '%s'\n", line+5 );
-      language = language_id( line+5 );
+      language = internal_language_id( line+5 );
       return;
     }
     for( i = 0; i<strlen(line); i++ )
@@ -234,10 +240,10 @@ void init_translations()
   struct dirent *e;
   DIR *dp;
 
-  language_id( "English" );
+  internal_language_id( "English" );
 
-  if( dp = opendir( "LOCALE/" ) )
-    while ( e = readdir( dp ) )
+  if( ( dp = opendir( "LOCALE/" ) ) )
+    while ( ( e = readdir( dp ) ) )
       if( e->d_size && !strcmp( e->d_name+strlen( e->d_name )-4, ".TXT" ) )
       {
 	char *p;
