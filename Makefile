@@ -27,7 +27,8 @@ TYPE     = elf
 OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
-	   examples/ex_video.$(TYPE)
+	   examples/ex_video.$(TYPE) \
+	   examples/ex_vmsfscheck.$(TYPE)
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
