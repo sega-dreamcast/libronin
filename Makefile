@@ -135,6 +135,7 @@ dist: $(DISTHEADERS)
 		cp zlib/libz.a disttmp/ronin && \
 		cp zlib/zlib.h disttmp/ronin/include && \
 		cp zlib/zconf.h disttmp/ronin/include && \
+		cp lwip/COPYING disttmp/ronin/LWIP_COPYING && \
 		cp -R lwip/include/lwip disttmp/ronin/include/ && \
 		cp -R lwip/include/netif disttmp/ronin/include/ && \
 		cp -R lwip/include/ipv4/lwip disttmp/ronin/include/ && \

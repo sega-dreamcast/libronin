@@ -10,3 +10,7 @@ derived work.
 
 Absence of warranty: If it breaks it's your fault. 
 
+
+This package contains code from the lwIP project, which is copyright
+the Swedish Institute of Computer Science.  See LWIP_COPYING for
+license information concerting these parts of the code.
