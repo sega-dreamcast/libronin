@@ -95,8 +95,8 @@ EXTERN_C int read(int fd, void *buf, unsigned int len)
   /* printf("read(%d,%p,%d)\n", fd, buf, len); */
   if(fd<0 || fd>MAXFD)
     return -1;
-  while(len > sizeof(replybuf)) {
-    res = read(fd, buf, sizeof(replybuf));
+  while(len > 1024) {
+    res = read(fd, buf, 1024);
     if(res <= 0)
       return res;
     buf = ((char *)buf)+res;
