@@ -172,7 +172,7 @@ int write_sram( unsigned char *data, int size )
   header.numicons = 1;
   memcpy(header.palette, palette, sizeof(header.palette));
   time(&t);
-  __offtime(&t, 0, &tm);
+  tm = *localtime(&t);
   tstamp.year = tm.tm_year+1900;
   tstamp.month = tm.tm_mon+1;
   tstamp.day = tm.tm_mday;
