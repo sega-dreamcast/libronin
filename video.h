@@ -14,6 +14,8 @@ void dc_waitvbl();
 void dc_setup_ta();
 void dc_reset_screen( int hires, int lace );
 
+void dc_set_border( unsigned int color );
+
 void dc_draw_string(int x, int y, const char *message, int color);
 void dc_draw_char12(int x, int y, int c, int color);
 void dc_clrscr(int color);

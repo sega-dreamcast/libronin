@@ -90,6 +90,12 @@ void dc_init_pvr()
   set_regs(scrn_params, sizeof(scrn_params)/sizeof(scrn_params[0])/2);
 }
 
+void dc_set_border( unsigned int color )
+{
+  *(volatile unsigned int *)
+    ((volatile unsigned char *)(void *)0xa05f0000+0x8040) = color;
+}
+
 
 /* Set up video registers to the desired
    video mode
