@@ -75,6 +75,20 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
 
   res = maple_docmd(info->port, info->dev, MAPLE_COMMAND_DEVINFO, 0, NULL);
 
+#ifndef NOSERIAL
+  if(!res)
+    report("A1 ");
+  else if(res[0] != MAPLE_RESPONSE_DEVINFO) {
+    report("A2 ");
+    report(itoa(res[0]));
+    report(" ");
+  }
+  else if(!(res[3]>=28))
+    report("A3 ");
+  else if(!((func=read_belong((unsigned int *)(res+4)))&MAPLE_FUNC_MEMCARD))
+    report("A4 ");
+#endif
+
   if(res && res[0] == MAPLE_RESPONSE_DEVINFO && res[3]>=28 &&
      ((func=read_belong((unsigned int *)(res+4)))&MAPLE_FUNC_MEMCARD)) {
     int p=0;
@@ -104,10 +118,11 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
     res = maple_docmd(info->port, info->dev, MAPLE_COMMAND_GETMINFO, 2, param);
     if(res[0] != MAPLE_RESPONSE_DATATRF)
     { /* Workaround for Nexus VMU clone */
-      usleep(10000);
+      usleep(15000); //Originally 10000 for Nexus.
       res=maple_docmd(info->port, info->dev, MAPLE_COMMAND_GETMINFO, 2, param);
     }   
 
+#ifndef NOSERIAL
     if(!res)
       report("F0");
     if(res[0] != MAPLE_RESPONSE_DATATRF)
@@ -120,6 +135,7 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
     {
       reportf("F3:%x ", read_belong((unsigned int *)(res+4)));
     }
+#endif
 
     if(res && res[0] == MAPLE_RESPONSE_DATATRF && res[3]>=7 &&
        read_belong((unsigned int *)(res+4)) == MAPLE_FUNC_MEMCARD) {
@@ -133,8 +149,10 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
       info->num_blocks = minfo->num_blocks;
 
       /* FIXME?  Can't handle cards with fat size != 1 */
+#ifndef NOSERIAL
       if(info->fat_size != 1)
         reportf("Unhandled fat_size: %d\n", info->fat_size);
+#endif
       return info->fat_size == 1;
 
     } else {
