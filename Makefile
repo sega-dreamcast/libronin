@@ -30,7 +30,7 @@ CFLAGS = $(CCFLAGS)
 
 
 
-OBJECTS  = report.o ta.o maple.o video.o c_video.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o
+OBJECTS  = report.o ta.o maple.o video.o c_video.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o matrix.o
 
 ifeq "$(NETSERIAL)" "1"
 OBJECTS += netserial.o
