@@ -136,12 +136,12 @@ int main(int argc, char **argv)
 
         if((xoffset += xwind) > 320+128) {
           xoffset = 40;
-          xwind=random(4);
+          xwind=rand()%4;
           reportf("wind: %d, %d\n", xwind, ywind);
         }
         if((yoffset += ywind) > 256+77) {
           yoffset = 40;
-          ywind=random(4);
+          ywind=rand()%4;
           reportf("wind: %d, %d\n", xwind, ywind);
         }
         
