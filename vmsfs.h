@@ -108,6 +108,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
                       void *icons, void *eyecatch,
                       void *data, unsigned long datasize,
                       struct timestamp *tstamp);
+extern int vmsfs_errno;
 END_EXTERN_C
 
 

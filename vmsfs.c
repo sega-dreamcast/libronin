@@ -9,18 +9,45 @@ static unsigned int tmppkt[256];
 static unsigned char tmpblk[8192];
 static struct dir_iterator tmpiter;
 static struct dir_entry tmpentry;
-static int vmsfs_errno;
+int vmsfs_errno;
 static int ous_want;
 static int ous_have;
 
-#define VMSFS_EOUS     1  /* Out of space */
-#define VMSFS_ETRUNK   2  /* Out of blocks while writing. File trunkated. */
-#define VMSFS_EBLOCK   3  /* Failed to write block */
-#define VMSFS_ENODIR   4  /* Failed to locate a free dir entry */
-#define VMSFS_SYNCFAT  5  /* Failed to sync FAT */
-#define VMSFS_SYNCROOT 6  /* Failed to sync root block */
-#define VMSFS_ERDIR    7  /* Failed to read dir entry */
-#define VMSFS_EWDIR    8  /* Failed to write dir entry */
+//FIXME: Narrow this down to a slightly less massive amount of errnos
+//not usable outside of debugging the library.
+
+#define VMSFS_EOUS     1  /* Out of space. Needed space in @[ous_want] */
+#define VMSFS_EFORMAT  2  /* VMS is not formatted */
+#define VMSFS_EOPEN    3  /* Failed to open file */
+
+#define VMSFS_ETRUNK   4  /* Out of blocks while writing. File trunkated. */
+#define VMSFS_EBLOCK   5  /* Failed to write block */
+#define VMSFS_EWRITE   6  /* Failed to write block @[ous_want] in write */ 
+
+#define VMSFS_ENODIR   7  /* Failed to locate a free dir entry */
+#define VMSFS_EDIRR    8  /* Failed to read dir entry */
+#define VMSFS_EDIRW    9  /* Failed to write dir entry */
+
+#define VMSFS_EBIGR   10  /* Wanted block number >= 0x10000 in read */
+#define VMSFS_EBIGW   11  /* Wanted block number >= 0x10000 in write */
+#define VMSFS_EBIGV   12  /* Wanted block number >= 0x10000 in verify */
+#define VMSFS_EREAD   13  /* Failed to read block @[ous_want] in read */
+#define VMSFS_EVFYR   14  /* Failed to read block @[ous_want] in verify */
+#define VMSFS_EVFY    15  /* Verification failed on block @[ous_want] */
+
+#define VMSFS_EBBLKR  16  /* Corrent block is unallocated block or
+                             last block on VMU already passed or when
+                             processing block @[ous_want] in read_file */
+#define VMSFS_EBBLKO  17  /* Same as EBBLOCKR, but in open_file */
+
+/* Not used */
+#define VMSFS_SYNCFAT  50  /* Failed to sync FAT to block @[ous_want] */
+#define VMSFS_SYNCROOT 51  /* Failed to sync root block */
+#define VMSFS_EBBLKDIR 52  /* Corrent block is unallocated block or
+                              last block on VMU already passed or when
+                              processing block or out of files on VMS
+                              in next_dir */
+
 
 static unsigned int read_belong(unsigned int *l)
 {
@@ -81,27 +108,76 @@ char *vmsfs_describe_error()
 
   switch(vmsfs_errno)
   {
+   case 0:
+     return "No error.";
    case VMSFS_EOUS:
      strcpy(buf, "Not enough space on VMU. Need ");
      strcat(buf, itoa(ous_want));
      strcat(buf, " blocks.");
      return buf;
+   case VMSFS_EFORMAT:
+     return "VMS not formatted!";     
+   case VMSFS_EOPEN:
+     return "Failed to open file.";     
    case VMSFS_ETRUNK:
      return "FATAL: Out of blocks while writing! File trunkated!";
    case VMSFS_EBLOCK:
      return "Failed to write block.";
+   case VMSFS_EWRITE:
+     strcpy(buf, "Failed to write block number ");
+     strcat(buf, itoa(ous_want));
+     strcat(buf, ".");
+     return buf;     
    case VMSFS_ENODIR:
      return "Failed to locate a free dir entry.";
+   case VMSFS_EDIRR:
+     return "Failed to read dir entry.";
+   case VMSFS_EDIRW:
+     return "Failed to write dir entry.";
+   case VMSFS_EBIGR:
+     return "Refused to read block >= 0x10000.";
+   case VMSFS_EBIGW:
+     return "Refused to write block >= 0x10000.";
+   case VMSFS_EBIGV:
+     return "Refused to verify block >= 0x10000.";
+   case VMSFS_EREAD:
+     strcpy(buf, "Failed to read block number ");
+     strcat(buf, itoa(ous_want));
+     strcat(buf, ".");
+     return buf;
+   case VMSFS_EVFYR:
+     strcpy(buf, "Failed to read block number ");
+     strcat(buf, itoa(ous_want));
+     strcat(buf, " while verifying.");
+     return buf;
+   case VMSFS_EVFY:
+     strcpy(buf, "Verification failed on block number ");
+     strcat(buf, itoa(ous_want));
+     strcat(buf, ".");
+     return buf;
+   case VMSFS_EBBLKR:
+     strcpy(buf, "Special error in vmsfs_read_file while reading block ");
+     strcat(buf, itoa(ous_want));
+     strcat(buf, ".");
+     return buf;
+   case VMSFS_EBBLKO:
+     strcpy(buf, "Special error in vmsfs_open_file while reading block ");
+     strcat(buf, itoa(ous_want));
+     strcat(buf, ".");
+     return buf;
+
+#if 0
    case VMSFS_SYNCFAT:
      return "Failed to sync FAT.";
    case VMSFS_SYNCROOT:
      return "Failed to sync root block.";
-   case VMSFS_ERDIR:
-     return "Failed to read dir entry.";
-   case VMSFS_EWDIR:
-     return "Failed to write dir entry.";
+#endif
+
    default:
-     return "Unknown error!";
+     strcpy(buf, "Unknown error '");
+     strcat(buf, itoa(vmsfs_errno));
+     strcat(buf, "'!");
+     return buf;
   }
 }
 
@@ -157,6 +233,7 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
 
     if(part >= info->partitions) {
       report("E0 ");
+      //FIXME: errno?
       return 0;
     }
 
@@ -205,11 +282,13 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
 
     } else {
       report("E1 ");
+      //FIXME: errno?
       return 0;
     }
     
   } else {
     report("E2 ");
+    //FIXME: errno?
     return 0;
   }
 }
@@ -250,14 +329,15 @@ int vmsfs_read_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr)
   unsigned int param[2];
   int subblk = info->blocksz/info->readcnt;
 
-  if(blk>=0x10000)
+  if(blk>=0x10000) {
+    vmsfs_errno = VMSFS_EBIGR;
     return 0;
+  }
 
   for(retr = 0; retr < 5; retr++) {
     for(phase = 0; phase < info->readcnt; phase++) {
       write_belong(&param[0], MAPLE_FUNC_MEMCARD);
       write_belong(&param[1], (info->pt<<24)|(phase<<16)|blk);
-      //FIXME: Timer problem if docmd was done somewhere else within 15000µs?
       if((res = maple_docmd(info->port, info->dev,
 			    MAPLE_COMMAND_BREAD, 2, param)) &&
 	 res[0] == MAPLE_RESPONSE_DATATRF && res[3] >= 2+(subblk>>2) &&
@@ -266,10 +346,15 @@ int vmsfs_read_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr)
 	memcpy(ptr+subblk*phase, res+12, subblk);
       else
 	break;
+      usleep(15000);
     }
     if(phase >= info->readcnt)
       return 1;
+    usleep(15000);
   }
+
+  vmsfs_errno = VMSFS_EREAD;
+  ous_want = blk;
   return 0;
 }
 
@@ -280,29 +365,38 @@ static int vmsfs_verify_block(struct vmsinfo *info, unsigned int blk, unsigned c
   unsigned int param[2];
   int subblk = info->blocksz/info->readcnt;
 
-  if(blk>=0x10000)
+  if(blk>=0x10000) {
+    vmsfs_errno = VMSFS_EBIGV;
     return 0;
+  }
 
-  for(retr = 0; retr < 5; retr++) {
+  for(retr = 0; retr < 5; retr++)
+  {
     for(phase = 0; phase < info->readcnt; phase++) {
       write_belong(&param[0], MAPLE_FUNC_MEMCARD);
       write_belong(&param[1], (info->pt<<24)|(phase<<16)|blk);
-      //FIXME: Timer problem if docmd was done somewhere else within 15000µs?
       if((res = maple_docmd(info->port, info->dev,
 			    MAPLE_COMMAND_BREAD, 2, param)) &&
 	 res[0] == MAPLE_RESPONSE_DATATRF && res[3] >= 2+(subblk>>2) &&
 	 read_belong((unsigned int *)(res+4)) == MAPLE_FUNC_MEMCARD &&
 	 read_belong((unsigned int *)(res+8)) == ((info->pt<<24)|(phase<<16)|blk))
       {
-	if(memcmp(ptr+subblk*phase, res+12, subblk))
+	if(memcmp(ptr+subblk*phase, res+12, subblk)) {
+          vmsfs_errno = VMSFS_EVFY;
+          ous_want = blk;
 	  return 0;
+        }
       }
       else
 	break;
+      usleep(15000);
     }
     if(phase >= info->readcnt)
       return 1;
+    usleep(15000);
   }
+  vmsfs_errno = VMSFS_EVFYR;
+  ous_want = blk;
   return 0;
 }
 
@@ -319,8 +413,10 @@ int vmsfs_write_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr
   if(subblk>253)
     subblk = 253;
 
-  if(blk>=0x10000)
+  if(blk>=0x10000) {
+    vmsfs_errno = VMSFS_EBIGW;
     return 0;
+  }
 
   for(retr = 0; retr < 5; retr++) {
     for(phase = 0; phase < info->writecnt; phase++) {
@@ -344,6 +440,8 @@ int vmsfs_write_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr
         return 1;
     }
   }
+  vmsfs_errno = VMSFS_EWRITE;
+  ous_want = blk;
   return 0;
 }
 
@@ -355,8 +453,10 @@ int vmsfs_get_superblock(struct vmsinfo *info, struct superblock *s)
   if(!vmsfs_read_block(info, info->root_loc, s->root))
     return 0;
   for(i=0; i<16; i++)
-    if(s->root[i] != 0x55)
+    if(s->root[i] != 0x55) {
+      vmsfs_errno = VMSFS_EFORMAT;
       return 0;
+    }
   if(!vmsfs_read_block(info, info->fat_loc, s->fat))
     return 0;
   s->root_modified=0;
@@ -368,15 +468,16 @@ int vmsfs_sync_superblock(struct superblock *s)
 {
   if(s->fat_modified &&
      !vmsfs_write_block(s->info, s->info->fat_loc, s->fat))
-  {
-    vmsfs_errno = VMSFS_SYNCFAT;
     return 0;
-  }
+    /* write_block has alread set ous_want, and that error is probably
+       more interesting. (was VMSFS_SYNCFAT) */
+
   s->fat_modified = 0;
   if(s->root_modified &&
      !vmsfs_write_block(s->info, s->info->root_loc, s->root))
   {
-    vmsfs_errno = VMSFS_SYNCROOT;
+    /* write_block has alread set ous_want, and that error is probably
+       more interesting. (was VMSFS_SYNCROOT) */
     return 0;
   }
   s->root_modified = 0;
@@ -431,8 +532,11 @@ int vmsfs_next_dir_entry(struct dir_iterator *i, struct dir_entry *d)
   d->dir = i;
   if(i->dcnt >= (i->super->info->blocksz>>5)-1) {
     i->this_blk = i->next_blk;
-    if(i->this_blk == 0xfffa || i->this_blk == 0xfffc || !i->blks_left--)
+    if(i->this_blk == 0xfffa || i->this_blk == 0xfffc || !i->blks_left--) {
+      // This is overwritten in higer functions.
+      //      vmsfs_errno = VMSFS_EBBLKDIR
       return 0;
+    }
     if(!vmsfs_read_block(i->super->info, i->this_blk, i->blk))
       return 0;
     i->next_blk = vmsfs_get_fat(i->super, i->this_blk);
@@ -464,14 +568,15 @@ int vmsfs_write_dir_entry(struct dir_entry *d)
 {
   if(!vmsfs_read_block(d->dir->super->info, d->dblk, tmpblk))
   {
-    vmsfs_errno = VMSFS_ERDIR;
-    return -VMSFS_ERDIR;
+    vmsfs_errno = VMSFS_EDIRR;
+    return 0;
   }
   memcpy(tmpblk+d->dpos*0x20, d->entry, 0x20);
   if(!vmsfs_write_block(d->dir->super->info, d->dblk, tmpblk))
   {
-    vmsfs_errno = VMSFS_EWDIR;
-    return -VMSFS_EWDIR;
+    //FIXME: write_block has already sat an errno. Migh be more interesting.
+    vmsfs_errno = VMSFS_EDIRW;
+    return 0;
   }
     
   return 1;
@@ -497,8 +602,11 @@ int vmsfs_open_file(struct superblock *super, char *name,
     while(header_read < 0x80) {
       if(header_read)
 	loc = vmsfs_get_fat(super, loc);
-      if(loc == 0xfffa || loc == 0xfffc)
+      if(loc == 0xfffa || loc == 0xfffc) {
+        vmsfs_errno = VMSFS_EBBLKO;
+        ous_want = loc;
 	return 0;
+      }
       if(!vmsfs_read_block(super->info, loc, file->blk+header_read))
 	return 0;
       header_read += super->info->blocksz;
@@ -518,8 +626,11 @@ int vmsfs_open_file(struct superblock *super, char *name,
     while(header_sz >= header_read) {
       header_read += super->info->blocksz;
       loc = vmsfs_get_fat(super, loc);
-      if(loc == 0xfffa || loc == 0xfffc)
+      if(loc == 0xfffa || loc == 0xfffc) {
+        vmsfs_errno = VMSFS_EBBLKO;
+        ous_want = loc;
 	return 0;
+      }
       i = 1;
     }
     if(i)
@@ -530,7 +641,9 @@ int vmsfs_open_file(struct superblock *super, char *name,
     file->left = file->size;
     return 1;
   }
-   return 0;
+
+  vmsfs_errno = VMSFS_EOPEN;
+  return 0;
 }
 
 int vmsfs_read_file(struct vms_file *file, unsigned char *buf,
@@ -539,6 +652,7 @@ int vmsfs_read_file(struct vms_file *file, unsigned char *buf,
   int bleft;
 
   if(cnt > file->left)
+    //FIXME: errno here. Not important though.
     return 0;
 
   if(!cnt)
@@ -562,8 +676,13 @@ int vmsfs_read_file(struct vms_file *file, unsigned char *buf,
   while(cnt >= file->super->info->blocksz) {
     int newloc = vmsfs_get_fat(file->super, file->loc);
     if(newloc == 0xfffa || newloc == 0xfffc ||
-       !vmsfs_read_block(file->super->info, newloc, buf))
+       !vmsfs_read_block(file->super->info, newloc, buf)) {
+      if(!vmsfs_errno) {
+        vmsfs_errno = VMSFS_EBBLKR;
+        ous_want = newloc;
+      }
       return 0;
+    }
     file->loc = newloc;
     file->left -= file->super->info->blocksz;
     cnt -= file->super->info->blocksz;
@@ -573,8 +692,13 @@ int vmsfs_read_file(struct vms_file *file, unsigned char *buf,
   if(cnt) {
     int newloc = vmsfs_get_fat(file->super, file->loc);
     if(newloc == 0xfffa || newloc == 0xfffc ||
-       !vmsfs_read_block(file->super->info, newloc, file->blk))
+       !vmsfs_read_block(file->super->info, newloc, file->blk)) {
+      if(!vmsfs_errno) {
+        vmsfs_errno = VMSFS_EBBLKR;
+        ous_want = newloc;
+      }
       return 0;
+    }
     memcpy(buf, file->blk, cnt);
     file->loc = newloc;
     file->offs = cnt;
@@ -644,7 +768,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
     {
       vmsfs_errno = VMSFS_ENODIR;
       report("No empty dir entry found.\n");
-      return -VMSFS_ENODIR;
+      return 0;
     }
     tmpentry.entry[2] = 0xfa;
     tmpentry.entry[3] = 0xff;
@@ -663,7 +787,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
     ous_want=blkcnt;
     ous_have=freecnt;
     report("Not enough space left on device.\n");
-    return -VMSFS_EOUS;
+    return 0;
   }
   while(blkcnt--) {
     int n, blkfill = super->info->blocksz;
@@ -705,6 +829,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
 	blkfill -= n;	
       } else {
         report("Incorrect input\n");
+        //FIXME: errno?
 	return 0;
       }
     }
@@ -715,7 +840,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
         vmsfs_errno = VMSFS_ETRUNK;
         report("FATAL: Out of allocatable blocks. File trunkated!"
                " This should not happen.\n");
-	return -VMSFS_ETRUNK;
+	return 0;
       }
       else
 	nextblk = 0xfffc;
@@ -731,9 +856,8 @@ int vmsfs_create_file(struct superblock *super, char *name,
       vmsfs_set_fat(super, lastblk, currblk);
     if(!vmsfs_write_block(super->info, currblk, tmpblk))
     {
-      vmsfs_errno = VMSFS_EBLOCK;
       report("Failed to write block.\n"); //Joytech gets this.
-      return -VMSFS_EBLOCK;
+      return 0;
     }
   }
   while(nextblk != 0xfffa && nextblk != 0xfffc) {
@@ -744,6 +868,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
   if(headersize || iconsize || eyesize || datasize || padsize)
   {
     report("Incorrect input. (2)\n");
+    //FIXME: errno?
     return 0;
   }
   return vmsfs_sync_superblock(super) && vmsfs_write_dir_entry(&tmpentry);

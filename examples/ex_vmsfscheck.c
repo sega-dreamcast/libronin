@@ -9,6 +9,13 @@
 #include "dc_time.h"
 #include "notlibc.h"
 
+//gtext
+#include "video.h"
+#include "gtext.h"
+#include "cdfs.h"
+#include "ta.h"
+
+
 #define SRAMSIZE 8192
 
 static unsigned char icondata[] = {
@@ -76,7 +83,42 @@ static struct tm tm;
 unsigned char *SRAM;
 unsigned char *RESTOREDRAM;
 
-void write_sram( unsigned char *data, int size )
+#define NUMLINES 20
+#define LINEHEIGHT 22
+static char *lines[NUMLINES];
+
+struct font *the_font;
+
+void gwrite(unsigned char *message, unsigned int color)
+{
+  int line;
+
+  ta_sync();
+  ta_begin_frame();
+  ta_commit_end();
+  for(line=0; line<NUMLINES; line++)
+  {
+    if(line==(NUMLINES-1))
+      lines[line] = message;
+    else
+      lines[line] = lines[line+1];
+
+    draw_text(40, line*LINEHEIGHT, 640, lines[line], the_font, color);
+  }
+  ta_commit_frame();
+  ta_sync();
+}
+
+void init_lines()
+{
+  int line;
+  for(line=0; line<NUMLINES; line++)
+    lines[line] = "";
+}
+
+int status_vmu, status_vmu_time;
+char *status_vmu_message;
+int write_sram( unsigned char *data, int size )
 {
   time_t t;
   int i;
@@ -92,22 +134,33 @@ void write_sram( unsigned char *data, int size )
       }
     }
 
-  if(sram_save_unit<0)
+  if(sram_save_unit<0) {
+    gwrite("1-", C_YELLOW);
     report("1-");
-  else
+  } else
     reportf("sram_save_unit: %d\n", sram_save_unit);
 
-  if(!vmsfs_check_unit(sram_save_unit, 0, &info))
+  if(!vmsfs_check_unit(sram_save_unit, 0, &info)) {
+    gwrite("2-", C_YELLOW);
     report("2-");
+  }
 
-  if(!vmsfs_get_superblock(&info, &super))
+  if(!vmsfs_get_superblock(&info, &super)) {
+    gwrite("3 ", C_YELLOW);
     report("3 ");
+  }
 
+  vmsfs_errno = 0;
   if(sram_save_unit < 0 || !vmsfs_check_unit(sram_save_unit, 0, &info) ||
      !vmsfs_get_superblock(&info, &super))
   {
-    report("No memory unit found.\n");
-    return;
+    if( sram_save_unit < 0 )
+      status_vmu_message = "No memory unit found.";
+    else
+      status_vmu_message = vmsfs_describe_error();
+    gwrite(status_vmu_message, C_RED);
+    reportf("%s\n", status_vmu_message);
+    return 0;
   }
 
   memset(&header, 0, sizeof(header));
@@ -127,13 +180,21 @@ void write_sram( unsigned char *data, int size )
   tstamp.wkday = (tm.tm_wday+6)%7;
   vmsfs_beep(&info, 1);
 
-  if(!vmsfs_create_file(&super, "vmsfschk.tmp", &header, icondata, NULL,
-			data, size, &tstamp))
-    report("Failed to write SRAM to VMS!\n");
-  vmsfs_beep(&info, 0);
+  if(!vmsfs_create_file(&super, "vmsfschk.tmp", &header, icondata, 
+                        NULL, data, size, &tstamp))
+  {
+    if(vmsfs_errno == 0)
+      status_vmu_message = "Failed to save due to unknown error!";
+    else
+      status_vmu_message = vmsfs_describe_error();
+    reportf("%s\n", status_vmu_message);
+    gwrite(status_vmu_message, C_RED);
+    return 0;
+  }
+  return 1;
 }
 
-void restore_sram( )
+int restore_sram( )
 {
   int i;
   unsigned int cards = 0;
@@ -143,24 +204,34 @@ void restore_sram( )
   sram_save_unit = -1;
 
   for(i=0; i<24; i++)
+  {
     if(vmsfs_check_unit(i, 0, &info) && vmsfs_get_superblock(&info, &super)) {
       cards |= 1<<i;
       sram_save_unit = i;
       reportf("Save unit is %d\n", i);
       if(!vmsfs_open_file(&super, "vmsfschk.tmp", &file)) {
-        report("No vmsfschk.tmp found on this unit.\n");
-	continue;
+        //Don display this message in a real application.
+        status_vmu_message = "No vmsfschk.tmp found on this unit.";
+        reportf("%\n", status_vmu_message);
+        gwrite(status_vmu_message, C_RED);
+        continue;
       }
       if(strncmp(file.header.id, "vmsfscheck", 16)) {
-        reportf("Incorrect id '%s'.\n", file.header.id);  
+        status_vmu_message = "Incorrect id.";
+        reportf("%\n", status_vmu_message);
+        gwrite(status_vmu_message, C_RED);
         continue;
       }
       if(strncmp(file.header.longdesc, "Delete this file", 32)) {
-        reportf("Incorrect longdesc '%s'.\n", file.header.longdesc);
+        status_vmu_message = "Incorrect id.";
+        reportf("%\n", status_vmu_message);
+        gwrite(status_vmu_message, C_RED);
         continue;
       }
       if(file.size > 0x10000) {
-        reportf("File to big '%d'.\n", file.size);
+        status_vmu_message = "File to big.";
+        reportf("%\n", status_vmu_message);
+        gwrite(status_vmu_message, C_RED);
         continue;
       }        
 
@@ -168,47 +239,96 @@ void restore_sram( )
 
       if(vmsfs_read_file(&file, RESTOREDRAM, file.size)) {
         sram_save_unit = i;
-        reportf("Save unit is %d\n", i);
-	break;
+        reportf("Save unit is %d\n\n", i);
+        gwrite("File restored.", C_GREEN);
+	return 1;
       }
     }
+  }
+  return 0;
 }
 
 int main(int argc, char **argv)
 {
   int i,x;
 
+#ifndef NOSERIAL
   serial_init(57600);
-  usleep(5);
-  report("Test starting\n");
+#endif
+  //gtext
+  dc_setup_ta();
+
+  init_palette();
+  init_twiddletab();
+  //end gtext
+  init_lines();
+
+  report("Setting up GD drive ... ");
+  cdfs_init();
+  report("GD OK\r\n");
+  gwrite("GD OK", C_GREEN);
+
+  /* There needs to be a font on the CD */
+  the_font = load_font( "/GFX/DEFAULT.FNT" );
+
+  report("Font loaded, test starting.\n");
+  gwrite("Font loaded, test starting ...", C_GREEN);
 
   maple_init();
   report("Maple BUS initiated.\n");
+  gwrite("Maple BUS initiated.", C_GREEN);
 
   SRAM = malloc(SRAMSIZE);
   RESTOREDRAM = malloc(SRAMSIZE);
   i=0xF1;
   reportf("\nSaving %dB %d's ...\n", SRAMSIZE, i);
+  gwrite("Saving.", C_YELLOW);
   memset(SRAM, i, SRAMSIZE);
   for(x=0; x<SRAMSIZE; x++) {
     if(SRAM[x] != i) {
       reportf("\nVerification of original failed at count %d!\n", x);
+      gwrite("Verification of original failed.", C_RED);
       break;
     }
   }
-  write_sram( SRAM, SRAMSIZE );
-  
-  report("Saved. Restoring ...\n");
-  restore_sram();
-  report("\nRestored.\n");
-  for(x=0; x<SRAMSIZE; x++) {
-    if(RESTOREDRAM[x] != i) {
-      reportf("\nVerification failed at count %d!\n", x);
-      break;
+  if(write_sram( SRAM, SRAMSIZE ))
+  {
+    report("Saved. Restoring ...\n");
+    gwrite("Saved. Restoring ...", C_YELLOW);
+    if(restore_sram())
+    {
+      report("\nRestored. Verifying ...\n");
+      gwrite("Restored. Verifying ...", C_YELLOW);
+      for(x=0; x<SRAMSIZE; x++) {
+        if(RESTOREDRAM[x] != i) {
+          reportf("\nVerification failed at count %d!\n", x);
+          gwrite("Verification failed.", C_RED);
+          break;
+        } else if(x==(SRAMSIZE-1)) {
+          report("\nVerification successfull. A-OK!\n");
+          gwrite("Verification successfull. A-OK!", C_GREEN);
+        }
+      }
     }
+    free(SRAM);
+    free(RESTOREDRAM);
   }
-  free(SRAM);
-  free(RESTOREDRAM);
 
+  usleep(15000*60*10);
   return 0;
 }
+
+/*
+#define C_RED   0xff0000
+#define C_GREEN 0x00ff00
+#define C_BLUE  0x0000ff
+#define C_MAGENTA (C_RED | C_BLUE)
+#define C_YELLOW (C_RED | C_GREEN)
+#define C_ORANGE (C_RED | 0x7f00)
+#define C_WHITE 0xffffff
+#define C_BLACK 0
+
+#define C_DARK_ORANGE 0x7f3f00
+
+#define C_GREY   0x7f7f7f
+*/

@@ -7,9 +7,11 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#include <ronin/notlibc.h>
-#include <ronin/cdfs.h>
-#include "menu.h"
+#include "notlibc.h"
+#include "cdfs.h"
+#include "report.h"
+//FIXME: Not funny...
+//#include "menu.h"
 
 #include "translate.h"
 #define NUM_LANGUAGES 20
@@ -88,10 +90,8 @@ int hashstr(const unsigned char *str)
 
 static int translation_id( char *what, int nocreate )
 {
-  int i;
   int hkey = hashstr( what );
   unsigned char hind = (unsigned char )((unsigned int)hkey & 255);
-  int fk = hashstr( what );
   struct translation *h = hash[ hind ];
 
   while( h ) {
@@ -115,7 +115,6 @@ unsigned char *___translate( char *what, int language )
 {
   int tid;
   char *r;
-  struct translation *t;  
 
   if( language == 0 )
     return what;

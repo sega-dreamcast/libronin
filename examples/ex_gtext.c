@@ -9,7 +9,6 @@
 int main(int argc, char **argv)
 {
   struct font *the_font;
-  extern int twiddletab[1024];
 
   serial_init(57600);
   dc_setup_ta();
