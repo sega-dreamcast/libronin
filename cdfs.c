@@ -416,10 +416,10 @@ int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset)
     else
       t += r;
   } else {
-    if((r = read_sectors((char *)sector_buffer[0],
-			 fh[fd-MIN_FD].sec0+(offset>>11), 1)))
+    unsigned char *csec;
+    if((r = read_cached_sector(&csec, fh[fd-MIN_FD].sec0+(offset>>11))))
       return r;
-    memcpy(buf, ((char *)sector_buffer[0])+(offset&2047), nbyte);
+    memcpy(buf, csec+(offset&2047), nbyte);
     t += nbyte;
   }
   return t;
