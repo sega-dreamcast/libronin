@@ -1,6 +1,6 @@
 NETSERIAL = 1
 NETCD = 1
-CCC = sh-elf-c++ -fno-rtti
+CCC = sh-elf-c++ -fno-rtti -fconserve-space
 CC = sh-elf-gcc -Wall
 LD = sh-elf-ld -EL
 AS = sh-elf-as -little
@@ -8,7 +8,7 @@ AR = sh-elf-ar
 
 
 #Must be O4 to handle long jumps correctly.
-OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-rtti -fno-defer-pop -fforce-addr -fstrict-aliasing -fallow-single-precision -funroll-loops -fdelete-null-pointer-checks -fno-exceptions -fconserve-space
+OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-defer-pop -fforce-addr -fstrict-aliasing -funroll-loops -fdelete-null-pointer-checks -fno-exceptions
 CPUFLAGS = -ml  -m4-single-only
 INCLUDES = -I. -Izlib
 
