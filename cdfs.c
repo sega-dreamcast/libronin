@@ -200,7 +200,7 @@ static int fncompare(const char *fn1, int fn1len, const char *fn2, int fn2len)
   while(fn2len--)
     if(!fn1len--)
       return *fn2 == ';';
-    else if(*fn1++ != *fn2++)
+    else if(toupper(*fn1++) != toupper(*fn2++))
       return 0;
   return fn1len == 0;
 }
