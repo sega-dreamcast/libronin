@@ -31,33 +31,37 @@ struct soundstatus {
 #define CMD_SET_STEREO(n) (0x40|(n))
 #endif
 
-#define CMD_SET_FREQ(n) (0x50|(n))
+#define CMD_SET_FREQ_EXP(n) (0x50|((n)&0xf))
 #define CMD_SET_BUFFER(n) (0x60|(n))
 
 #define CMD_EXPANSION(n) (~(n))
 
+#define FREQ_172_266_EXP  (-8)
+#define FREQ_344_531_EXP  (-7)
+#define FREQ_689_062_EXP  (-6)
+#define FREQ_1378_125_EXP (-5)
+#define FREQ_2756_25_EXP  (-4)
+#define FREQ_5512_5_EXP   (-3)
+#define FREQ_11025_EXP    (-2)
+#define FREQ_22050_EXP    (-1)
+#define FREQ_44100_EXP    (0)
+#define FREQ_88200_EXP    (1)
+#define FREQ_176400_EXP   (2)
+#define FREQ_352800_EXP   (3)
+#define FREQ_705600_EXP   (4)
+#define FREQ_1411200_EXP  (5)
+#define FREQ_2822400_EXP  (6)
+#define FREQ_5644800_EXP  (7)
 
-/* This gives 11025 Hz */
-#define FREQ_EXP      (-2)
-#define FREQ_MANTISSA (0)
 
-#define FREQ ((44100*(1024+FREQ_MANTISSA))>>(10-FREQ_EXP))
-
-
-/* 44100 Hz */
-#define FREQ1_EXP (0)
-#define FREQ1_MANTISSA (0)
-
-#define FREQ1 ((44100*(1024+FREQ1_MANTISSA))>>(10-FREQ1_EXP))
+#define FREQ_OF(E,M) ((44100*(1024+(M)))>>(10-(E)))
 
 
 #define ADJUST_BUFFER_SIZE(n) ((n)&~31)
 
 /* 1s buffer for menu */
-#define RING_BUFFER_SAMPLES ADJUST_BUFFER_SIZE(FREQ1)
+#define RING_BUFFER_SAMPLES ADJUST_BUFFER_SIZE(44100)
 
-/* .25s buffer for game */
-#define RING_BUFFER_SAMPLES0 ADJUST_BUFFER_SIZE(FREQ/4)
 
 /* 16bit */
 #define SAMPLE_MODE 0

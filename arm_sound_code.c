@@ -74,21 +74,37 @@ void do_command(int cmd)
      SOUNDSTATUS->stereo = cmd&1;
      break;
 #endif
-   case CMD_SET_FREQ(0):
-     freq_exp = FREQ_EXP;
-     freq_mantissa = FREQ_MANTISSA;
-     SOUNDSTATUS->freq = FREQ;
+   case CMD_SET_FREQ_EXP(-8):
+   case CMD_SET_FREQ_EXP(-7):
+   case CMD_SET_FREQ_EXP(-6):
+   case CMD_SET_FREQ_EXP(-5):
+   case CMD_SET_FREQ_EXP(-4):
+   case CMD_SET_FREQ_EXP(-3):
+   case CMD_SET_FREQ_EXP(-2):
+   case CMD_SET_FREQ_EXP(-1):
+     freq_exp = (cmd&7)-8;
+     SOUNDSTATUS->freq = FREQ_OF(freq_exp, freq_mantissa);
      break;
-   case CMD_SET_FREQ(1):
-     freq_exp = FREQ1_EXP;
-     freq_mantissa = FREQ1_MANTISSA;
-     SOUNDSTATUS->freq = FREQ1;
+   case CMD_SET_FREQ_EXP(0):
+   case CMD_SET_FREQ_EXP(1):
+   case CMD_SET_FREQ_EXP(2):
+   case CMD_SET_FREQ_EXP(3):
+   case CMD_SET_FREQ_EXP(4):
+   case CMD_SET_FREQ_EXP(5):
+   case CMD_SET_FREQ_EXP(6):
+   case CMD_SET_FREQ_EXP(7):
+     freq_exp = (cmd&7);
+     SOUNDSTATUS->freq = FREQ_OF(freq_exp, freq_mantissa);
      break;
    case CMD_SET_BUFFER(0):
-     SOUNDSTATUS->ring_length = RING_BUFFER_SAMPLES0;
-     break;
    case CMD_SET_BUFFER(1):
-     SOUNDSTATUS->ring_length = RING_BUFFER_SAMPLES;
+   case CMD_SET_BUFFER(2):
+   case CMD_SET_BUFFER(3):
+   case CMD_SET_BUFFER(4):
+   case CMD_SET_BUFFER(5):
+   case CMD_SET_BUFFER(6):
+   case CMD_SET_BUFFER(7):
+     SOUNDSTATUS->ring_length = RING_BUFFER_SAMPLES>>(cmd&15);
      break;
    case CMD_SET_MODE(MODE_PAUSE):
      *AICA(0) = (*AICA(0) & ~0x4000) | 0x8000;
@@ -139,9 +155,9 @@ int main()
 #ifdef STEREO
   SOUNDSTATUS->stereo = 0;
 #endif
-  freq_exp = FREQ_EXP;
-  freq_mantissa = FREQ_MANTISSA;
-  SOUNDSTATUS->freq = FREQ;
+  freq_exp = 0;
+  freq_mantissa = 0;
+  SOUNDSTATUS->freq = FREQ_OF(0, 0);
   SOUNDSTATUS->ring_length = RING_BUFFER_SAMPLES;
 
   aica_reset();
