@@ -13,7 +13,6 @@ START_EXTERN_C
 
 void exit(int rcode) /*__THROW*/ __attribute__ ((__noreturn__));
 void free(void *ptr);
-int __offtime(const long int *t, long int offset, struct tm *tp);
 int brk( void *ebdds );
 void *sbrk( ptrdiff_t incr );
 /*  Standard (ANSI/SVID/...)  functions: */
