@@ -61,32 +61,6 @@ void init_arm()
   for(i=0; i<0x200000; i++);
 }
 
-void write_samples(const short *data, int num)
-{
-  buff.full = 0;
-
-  if( buff.read_pos )
-  {
-    memcpy( buff.data, buff.data+buff.read_pos, (DC_SOUND_BS-buff.read_pos)*2 );
-    buff.write_pos -= buff.read_pos;
-    buff.read_pos = 0;
-  }
-
-  while( num-- )
-  {
-    if( buff.write_pos == DC_SOUND_BS )
-    {
-      buff.full = 1;
-      report( "Buffer overflow" );
-      return;
-    }
-    buff.data[ buff.write_pos++ ] = *(data++);
-  }
-
-  if( (DC_SOUND_BS - buff.write_pos) < 1152*2 )
-    buff.full = 1;
-}
-
 int fillpos;
 
 int read_sound_int(volatile int *p)
