@@ -263,3 +263,8 @@ EXTERN_C struct TOC *cdfs_gettoc()
 {
   return NULL;
 }
+
+EXTERN_C int cdfs_diskchanges(void)
+{
+  return 0;
+}
