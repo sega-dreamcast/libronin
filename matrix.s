@@ -243,6 +243,7 @@ sq_address:
 	.globl ___sdivsi3_i4, ___udivsi3_i4
 	
 ___sdivsi3_i4:	
+	mov.l r3,@-r15
         sts fpscr,r2
         mov #8,r3
         swap.w r3,r3
@@ -254,8 +255,9 @@ ___sdivsi3_i4:
         float fpul,dr2
         fdiv dr2,dr0
         ftrc dr0,fpul
-        rts
         lds r2,fpscr
+        rts
+	mov.l @r15+,r3
 
 ___udivsi3_i4:
         mov #1,r1
