@@ -118,9 +118,9 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   static int videobase=0xa05f8000;
   static int cvbsbase=0xa0702c00;
   static int hpos=0xa4;
-  static int hvcounter31=0x020d0359; /* 60Hz Lace */
+  static int hvcounter31=0x020c0359; /* 60Hz Lace */
   static int hvcounter15=0x01060359; /* 60Hz Nonlace */
-  static int hvcounter3150=0x0271035f; /* 50Hz Lace */
+  static int hvcounter3150=0x0270035f; /* 50Hz Lace */
   static int hvcounter1550=0x0138035f; /* 50Hz Nonlace */
   static int hborder=0x007e0345;
   int laceoffset=0;
@@ -143,6 +143,9 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
     hvcounter=(hz50? hvcounter1550 : hvcounter15);
   else
     hvcounter=(hz50? hvcounter3150 : hvcounter31);
+
+  if(hz50)
+    hborder = 0x008d034b;
     
   // Look up bytes per pixel as shift value
   mode=mode&3; //&3 is safety left over from asm.
@@ -205,6 +208,8 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
       videoflags|=1<<7;	//50Hz
 #else
     /*     videoflags|=(pal&3)<<6; */
+    if(cabletype&2)
+      videoflags|=(pal? 0x80 : 0x40);
 #endif
   }
 
@@ -214,9 +219,9 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   // Set vertical pos and border
 
   if(!(cabletype&2)) //VGA
-    voffset += 36;
+    voffset += 40;
   else
-    voffset += (hz50? 44 : 18);
+    voffset += (hz50? 18 : 18);
 
 #if 0    
   if(res==2 && pal)       // PAL Lace 
@@ -235,10 +240,17 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   *(int *)(videobase+0xec)=hpos;	// Horizontal pos
   *(int *)(videobase+0xd8)=hvcounter;	// HV counter
   *(int *)(videobase+0xd4)=hborder;	// Horizontal border
-  if(res==0)
-    attribs=((22<<8)+1)<<8;		//X-way pixel doubler
+  *(int *)(videobase+0xc8)=hborder<<16; // H sync
+  if(!(cabletype&2))
+    attribs=0x1f;
+  else if(hz50)
+    attribs=0x3d;
   else
-    attribs=22<<16;
+    attribs=0x16;
+  if(res==0)
+    attribs=((attribs<<8)+1)<<8;		//X-way pixel doubler
+  else
+    attribs=attribs<<16;
 
   *(int *)(videobase+0xe8)=attribs;	// Screen attributes
 
@@ -258,16 +270,22 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
     attribs |= 0x1f<<22;
     *(int *)(videobase+0xe0)=attribs;
   }
+#else
+  *(int *)(videobase+0xe0)=((cabletype&2)? (hz50? 0x7d6a53f : 0x7d6c63f) : 0x3f1933f);
 #endif
 
+#if 0
   vpos = (hz50? 310:260);
   if(!(cabletype&2))
     vpos = 510;
+#endif
 
   /* Set up vertical blank event */
+#if 0
   vpos = 242+voffset;
   if(!(cabletype&2))
     vpos = 482+voffset;
+#endif
   *(int *)(videobase+0xcc)=((voffset-2)<<16)|(voffset+lines+2);
 
   // Select RGB/CVBS
