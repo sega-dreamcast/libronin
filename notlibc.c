@@ -1,7 +1,10 @@
+
 /* 
  * Rudimentary aproximations and stubs for various libc functions. 
  */
 
+#include <unistd.h> /* (s)brk() definitions */
+#include <stddef.h>   /* for size_t */
 #include <stdlib.h>
 #include <stdio.h>
 #include "common.h"
@@ -34,7 +37,7 @@ int fprintf(FILE *stream,  const  char  *format, ...)
  {report("fprintf ignored\n");return -1;}
 int printf(const char  *format, ...){report("printf ignored\n");return -1;}
 int fputs( const char *s, FILE *stream ){report("fputs ignored\n"); return -1;}
-int __write(){report("__write ignored\n"); return -1;}
+int __write(int __fd, __const __ptr_t __buf, size_t __n){report("__write ignored\n"); return -1;}
 FILE *fopen(const char *f, const char *m){report("fopen ignored\n"); return 0;}
 int __isnan(){} //Expect warning.
 void __assert_fail(char *message){report("__asser_fail ignored\n");}
@@ -60,10 +63,40 @@ void exit(int rcode)
  */
 #define MEMSTART 0x8c300000
 #define MEMEND   0x8cf00000
+static int total_size;
 
+#ifdef REALMALLOC
+static int end_break=MEMSTART;
+
+int brk( void *ebdds ){reportf(" brk(%p) hardcoded fail\n", ebdds); return -1;}
+
+void *sbrk( int incr )
+{
+  int newend_break = end_break + incr + 32-incr%32;
+  
+  if(newend_break > MEMEND) {
+    report("sbrk: Out of allocatable memory!\n");
+    return (void *)-1;
+    /* Should set errno here if we are to be really compliant. */
+  }
+  
+  total_size += incr;
+  end_break = newend_break;
+  
+  reportf("sbrk [%d %d %d -> %p]\r\n",
+          incr/1024,
+          total_size/1024,
+          (MEMEND-end_break)/1024, 
+          end_break);
+
+  return (void *)(end_break);
+}
+
+
+#else /* REALMALLOC */
 static int last;
 static int mallocpointer=MEMSTART;
-static int total_size;
+
 void *malloc(size_t size)
 {
   int keep;
@@ -97,6 +130,7 @@ void free(void *ptr)
   } else
     reportf("Free called with non-last block (%p). Wasting some memory.\n", ptr);
 }
+#endif /* REALMALLOC */
 
 static unsigned int low_read_time()
 {

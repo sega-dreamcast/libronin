@@ -12,6 +12,8 @@ void exit(int rcode) __THROW __attribute__ ((__noreturn__));
 void *malloc(size_t size);
 void free(void *ptr);
 int __offtime(const long int *t, long int offset, struct tm *tp);
+int brk( void *ebdds );
+void *sbrk( int incr );
 END_EXTERN_C
 
 #endif //_NOTLIBC_H

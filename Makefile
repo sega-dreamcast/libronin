@@ -25,7 +25,7 @@ CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I.
 CFLAGS = $(CCFLAGS)
 
 
-OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o
+OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o
 
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
@@ -59,6 +59,7 @@ cleanish:
 
 clean: cleanish
 	rm -f libronin.a 
+	rm -f libronin-serial.a 
 
 
 examples: libronin.a $(EXAMPLES)
@@ -73,6 +74,12 @@ test-gtext: examples/ex_gtext.$(TYPE)
 
 test-showpvr: examples/ex_showpvr.$(TYPE) 
 	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_showpvr.$(TYPE)
+
+test-clouds: examples/ex_clouds.elf
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_clouds.$(TYPE)
+
+test-control: examples/ex_control.elf
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_control.$(TYPE)
 
 
 #ARM sound code
@@ -102,7 +109,7 @@ stella.elf: examples/ex_serial.c examples/ex_serial.o libronin.a serial.h Makefi
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec .bin
 
 .c.elf: libronin.a crt0.o Makefile
-	$(CC) -Wl,-Ttext=0x8c020000 $(CCFLAGS) $(CRT0) $*.c $(LINK)
+	$(CC) -Wl,-Ttext=0x8c020000 $(CCFLAGS) $(CRT0) $*.c $(LINK) -lm
 
 .c.bin: libronin-noserial.a crt0.o Makefile
 	$(CC) -Wl,-Ttext=0x8c010000,--oformat,binary -DNOSERIAL $(CCFLAGS) $(CRT0) $*.c $(LINK)
@@ -142,5 +149,6 @@ sound.o: arm_sound_code.h
 
 #Nice to have for special (libronin) development purposes.
 cdfs.o: gddrive.h
-examples/ex_gtext.$(TYPE): libronin.a gtext.c
+examples/ex_gtext.$(TYPE): libronin.a
 examples/ex_showpvr.$(TYPE): libronin.a
+examples/ex_cloud.$(TYPE): libronin.a
