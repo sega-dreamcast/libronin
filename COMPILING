@@ -1,0 +1,22 @@
+Note: This is a collection of experimental code not originally
+intended for external usage. It has evolved during the years and could
+perhaps benefit from refactoring in some places.
+
+
+Prerequisites:
+
+binutils and gcc for sh-elf and arm-elf. 
+
+For sh-elf you are recommended to use the 20030421 (or later if deemed
+appropriate) snapshot of gcc. That snapshot is know to generate correct
+code for sh4 most of the time,
+
+
+Building is straight forward: Just run "make"
+
+There is currently no "install" target.
+
+The normal place applications expect to find ronin is
+/usr/local/ronin/. So unless you want to change the include and
+link paths when building those applications, unpack or link ronin in
+/usr/local.
