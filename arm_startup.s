@@ -48,7 +48,7 @@ reset:
 	orr	r0,r0,#0xc0
 	msr	CPSR,r0
 	# Set stack
-	mov	sp,#0xf000
+	ldr	sp,stack_base
 
 	# Call main
 	bl	main
@@ -57,5 +57,8 @@ reset:
 done:	b	done
 
 
+stack_base:	
+	.long 0x0007fffc
+	
 	.end
 
