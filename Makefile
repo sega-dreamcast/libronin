@@ -1,3 +1,4 @@
+NETSERIAL = 0
 CCC = sh-elf-c++ -fno-rtti
 CC = sh-elf-gcc -Wall
 LD = sh-elf-ld -EL
@@ -7,7 +8,7 @@ AR = sh-elf-ar
 
 #Must be O4 to handle long jumps correctly.
 OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-rtti -fno-defer-pop -fforce-addr -fstrict-aliasing -fallow-single-precision -funroll-loops -fdelete-null-pointer-checks -fno-exceptions -fconserve-space
-CPUFLAGS = -ml  -m4-single-only -mhitachi
+CPUFLAGS = -ml  -m4-single-only
 INCLUDES = -I.
 
 # TYPE can be elf, srec or bin
@@ -25,7 +26,13 @@ CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. -DDC
 CFLAGS = $(CCFLAGS)
 
 
-OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o
+OBJECTS  = report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o
+
+ifeq "$(NETSERIAL)" "1"
+OBJECTS += netserial.o net/pci.o net/ether.o net/arp.o net/ip.o net/udp.o
+else
+OBJECTS += serial.o
+endif
 
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \

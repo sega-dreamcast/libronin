@@ -104,15 +104,13 @@ exc_hdler:
 	mov.l	r9,@-r15
 	mov.l	expevt_addr,r0
 	mov.l	@r0,r0
-	mov.l	r0,@-r15
-	sts.l	pr,@-r15
-	stc.l	spc,@-r15
+	mov	r0,r7
+	sts	pr,r6
+	stc	spc,r5
 	mova	exc_message,r0
 	mov.l	reportf_addr,r8
-	mov.l	r0,@-r15
 	jsr	@r8
-	nop
-	add	#16,r15
+	mov	r0,r4
 exc_hdler_stage_2:
 	stc	r3_bank,r3
 	stc	r2_bank,r2
@@ -146,16 +144,15 @@ exc_hdler_stage_2:
 	.word	0x0a3a	; stc	sgr,r10
 	mov	#8,r11
 .psloop:
-	mov.l	@r10,r0
-	mov.l	r0,@-r15
-	mov.l	r10,@-r15
+	mov.l	@r10,r6
+	mov	r10,r5
 	mova	exc_msg3,r0
-	mov.l	r0,@-r15
+	mov	r0,r4
 	jsr	@r8
 	add	#4,r10
 	dt	r11
 	bf/s	.psloop
-	add	#12,r15
+	add	#8,r15
 
 	jsr	@r9
 	nop
@@ -173,14 +170,14 @@ printregs:
 	mov.l	r4,@-r15
 	add	#-1,r4
 	mov.l	r1,@-r15
-	mov.l	r4,@-r15
+	mov	r4,r7
 	add	#-1,r4
-	mov.l	r0,@-r15
-	mov.l	r4,@-r15
+	mov	r0,r6
+	mov	r4,r5
 	mova	exc_msg2,r0
 	jsr	@r8
-	mov.l	r0,@-r15
-	add	#36,r15
+	mov	r0,r4
+	add	#20,r15
 	lds.l	@r15+,pr
 	rts
 	nop
@@ -261,11 +258,10 @@ unknown_irq:
 	stc.l	spc,@-r15
 	mova	int_message,r0
 	mov.l	reportf_addr2,r8
-	mov.l	r0,@-r15
 	jsr	@r8
-	nop
+	mov	r0,r4
 	bra	exc_hdler_stage_2
-	add	#16,r15
+	add	#12,r15
 	
 	.align	2
 
