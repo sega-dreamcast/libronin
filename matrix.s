@@ -237,10 +237,10 @@ sq_address:
 
 
 
-	! sdivsi3_i4 is borken in libgcc, it clobbers the FR bit
-	! in FPSCR.  This one doesn't.
+	! sdivsi3_i4 and udivsi3_i4 are both borken in libgcc,
+	! they clobber the FR bit in FPSCR.  These don't.
 
-	.globl ___sdivsi3_i4
+	.globl ___sdivsi3_i4, ___udivsi3_i4
 	
 ___sdivsi3_i4:	
         sts fpscr,r2
@@ -257,7 +257,41 @@ ___sdivsi3_i4:
         rts
         lds r2,fpscr
 
-	
+___udivsi3_i4:
+        mov #1,r1
+        cmp/hi r1,r5
+        bf trivial
+	sts fpscr,r0
+        rotr r1
+	mov.l r0,@-r15
+        xor r1,r4
+        xor r1,r5
+	mov #8,r1
+	swap.w r1,r1
+	or r0,r1
+        mova 1f,r0
+	lds r1,fpscr
+        lds r4,fpul
+        fmov.s @r0+,fr5
+        fmov.s @r0,fr4
+        float fpul,dr0
+        lds r5,fpul
+        float fpul,dr2
+        fadd dr4,dr0
+        fadd dr4,dr2
+        fdiv dr2,dr0
+        ftrc dr0,fpul
+        rts
+        lds.l @r15+,fpscr
+
+trivial:
+        rts
+        lds r4,fpul
+
+        .align 2
+
+1:	.double 2147483648
+
 	.end
 
 
