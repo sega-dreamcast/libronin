@@ -28,7 +28,8 @@ OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_video.$(TYPE) \
-	   examples/ex_vmsfscheck.$(TYPE)
+	   examples/ex_vmsfscheck.$(TYPE) \
+	   examples/ex_gtext.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
@@ -43,13 +44,15 @@ clean:
 	      arm_startup.o
 
 
-examples: $(EXAMPLES)
+examples: libronin.a $(EXAMPLES)
 
 
 #RIS specific upload targets
 test-vmufs: examples/ex_vmsfscheck.$(TYPE)
 	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_vmsfscheck.$(TYPE)
 
+test-gtext: examples/ex_gtext.$(TYPE) 
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_gtext.$(TYPE)
 
 #ARM sound code
 arm_sound_code.h: arm_sound_code.bin
@@ -115,3 +118,4 @@ sound.o: arm_sound_code.h
 
 #Nice to have for special (libronin) development purposes.
 cdfs.o: gddrive.h
+examples/ex_gtext.$(TYPE): libronin.a gtext.c
