@@ -1,7 +1,7 @@
 libronin - A Dreamcast development library
-Copyright (C) 2001, 2002  Marcus Comstedt <marcus@mc.pp.se>,
-			  Peter Bortas <peter@bortas.org>,
-			  Per Hedbor <per@hedbor.org>
+Copyright (C) 2001-2003  Marcus Comstedt <marcus@mc.pp.se>,
+			 Peter Bortas <peter@bortas.org>,
+			 Per Hedbor <per@hedbor.org>
 
 Permission to use, copy, modify and distribute libronin in binary
 form, is hereby granted without fee, providing that this license
@@ -14,3 +14,7 @@ Absence of warranty: If it breaks it's your fault.
 This package contains code from the lwIP project, which is copyright
 the Swedish Institute of Computer Science.  See LWIP_COPYING for
 license information concerting these parts of the code.
+
+This package contins code from the zlib library, which is copyright
+Jean-loup Gailly and Mark Adler.  See ZLIB_README for license
+information concerting these parts of the code.
