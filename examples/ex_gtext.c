@@ -6,11 +6,11 @@
 #include "cdfs.h"
 #include "ta.h"
 
-int main(int argc, char **argv)
+void setup()
 {
-  struct font *the_font;
-
   serial_init(57600);
+  usleep(1500000);
+
   dc_setup_ta();
 
   init_palette();
@@ -19,7 +19,13 @@ int main(int argc, char **argv)
   report("Setting up GD drive ... ");
   cdfs_init();
   report("GD OK\r\n");
+}
 
+int main(int argc, char **argv)
+{
+  struct font *the_font;
+
+  setup();
   /* There needs to be a font on the CD */
   the_font = load_font( "/GFX/DEFAULT.FNT" );
 
@@ -31,9 +37,18 @@ int main(int argc, char **argv)
   ta_commit_frame();
   ta_sync();
 
-  display_font(the_font);
-  report("Sleeping...\n");
-
+  report("Sleeping while showing text...\n");
   usleep(3*1000000);
+
+  ta_sync();
+  ta_begin_frame();
+  ta_commit_end();
+  display_font(the_font);
+  ta_commit_frame();
+  ta_sync();
+
+  report("Sleeping while showing font...\n");
+  usleep(3*1000000);
+
   return 0;
 }
