@@ -5448,4 +5448,4 @@ History:
          structure of old version,  but most details differ.)
 
 */
-#endif /* REALMALLOC */
+#endif /* OLDMALLOC */
