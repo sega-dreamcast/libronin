@@ -18,3 +18,6 @@ license information concerting these parts of the code.
 This package contins code from the zlib library, which is copyright
 Jean-loup Gailly and Mark Adler.  See ZLIB_README for license
 information concerting these parts of the code.
+
+This package contains code from Doug Lea's public domain malloc
+implementation.
