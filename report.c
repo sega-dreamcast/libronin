@@ -1,6 +1,7 @@
 /* Output to the serial slave. Mainly used for debuggging. */
 
 #include <stdarg.h>
+#include "report.h"
 
 //Public function.
 //FIXME: Move it to some string lib or something instead.

@@ -1,4 +1,4 @@
-#include "ronin.h"
+#include "video.h"
 #include "ta.h"
 
 /* Initialize the PVR subsystem to a known state */

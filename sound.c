@@ -1,5 +1,5 @@
 #include "soundcommon.h"
-#include "ronin.h"
+#include "sound.h"
 
 struct buffer buff;
 #include "arm_sound_code.h"

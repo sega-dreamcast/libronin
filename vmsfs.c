@@ -1,4 +1,6 @@
-#include "ronin.h"
+#include "common.h"
+#include "maple.h"
+#include "vmsfs.h"
 
 static unsigned int tmppkt[256];
 static unsigned char tmpblk[8192];
