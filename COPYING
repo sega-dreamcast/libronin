@@ -1,0 +1,12 @@
+libronin - A Dreamcast development library
+Copyright (C) 2001, 2002  Marcus Comstedt <marcus@mc.pp.se>,
+			  Peter Bortas <peter@bortas.org>,
+			  Per Hedbor <per@hedbor.org>
+
+Permission to use, copy, modify and distribute libronin in binary
+form, is hereby granted without fee, providing that this license
+information and copyright notice appear with all copies and any
+derived work.
+
+Absence of warranty: If it breaks it's your fault. 
+
