@@ -1,5 +1,5 @@
-NETSERIAL = 1
-NETCD = 1
+NETSERIAL = 0
+NETCD = 0
 CCC = sh-elf-c++ -fno-rtti
 CC = sh-elf-gcc -Wall
 LD = sh-elf-ld -EL
