@@ -1,29 +1,33 @@
-#include "net/pci.h"
-#include "net/ether.h"
-#include "net/ip.h"
-#include "net/udp.h"
+#include "lwip/api.h"
 #include <string.h>
 
 static char putc_buf[1024], oob_buf[1024];
 static int putc_pos = 0, oob_pos = 0;
-static unsigned char bcast_hw[] = { ~0, ~0, ~0, ~0, ~0, ~0 };
+static struct netconn *ser_conn = NULL;
+static struct netbuf *buf = NULL;
 
 static void low_send_putc(char *ptr, int l)
 {
-  udp_send_packet(bcast_hw, ~0, 1441, 1445, ptr, l);
+  if(ser_conn && buf && netconn_connect(ser_conn, IP_ADDR_BROADCAST, 1445)==ERR_OK) {
+    netbuf_ref(buf, ptr, l);
+    netconn_send(ser_conn, buf);
+  }
 }
 
 static void low_send_oob(char *ptr, int l)
 {
-  udp_send_packet(bcast_hw, ~0, 1441, 1447, ptr, l);
+  if(ser_conn && buf && netconn_connect(ser_conn, IP_ADDR_BROADCAST, 1447)==ERR_OK) {
+    netbuf_ref(buf, ptr, l);
+    netconn_send(ser_conn, buf);
+  }
 }
 
 void serial_init(int baudrate)
 {
-  unsigned int my_ip = 184658112/* - 256 - (11-4)*/;
-  pci_setup();
-  ether_setup();
-  ip_set_my_ip(&my_ip);
+  lwip_init();
+  ser_conn = netconn_new(NETCONN_UDP);
+  netconn_bind(ser_conn, IP_ADDR_ANY, 1441);
+  buf = netbuf_new();
   putc_pos = oob_pos = 0;
 }
 
