@@ -1,7 +1,7 @@
 #ifndef _RONIN_VIDEO_H
 #define _RONIN_VIDEO_H been_here_before
 
-x/* 
+/* 
  * Functions used to setup and operate on the framebuffer and tile
  * accellerator.
  */
