@@ -4,7 +4,7 @@ DEFINES= -DHAVE_CONFIG_H -I.. -I../..
 #  -DFPM_DEFAULT
 # -DASO_INTERLEAVE1 -DASO_IMDCT -DFPM_ARM
 
-ARMFLAGS=-mcpu=arm7 -ffreestanding -O2 -fomit-frame-pointer -ffast-math 
+ARMFLAGS=-mcpu=arm7 -ffreestanding -O5 -funroll-loops -fomit-frame-pointer -ffast-math 
 
 CFLAGS =  ${DEFINES} -Wall  ${ARMFLAGS}
 

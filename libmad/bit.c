@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: bit.c,v 1.2 2001-05-05 22:15:17 per Exp $
+ * $Id: bit.c,v 1.3 2001-05-06 13:13:07 per Exp $
  */
 
 # include "config.h"
@@ -131,13 +131,11 @@ unsigned long mad_bit_read(struct mad_bitptr *bitptr, unsigned int len)
 {
   register unsigned long value;
   int olen = len;
-  reportf( "bit_read %d (%p)... ", len, &olen);
   if (len < bitptr->left)
   {
     value = (bitptr->cache & ((1 << bitptr->left) - 1))>>(bitptr->left-len);
     bitptr->left -= len;
-    reportf("br %d: %d (%d %b)\n", olen, value,
-	    bitptr->left, bitptr->cache );
+/*     reportf("br %d: %d (%d %d)\n", olen, value,  bitptr->left, 8 ); */
     return value;
   }
 
