@@ -1,6 +1,7 @@
 #include <string.h> //FIXME: External dependecy.
 #include "cdfs.h"
 #include "gddrive.h"
+#include "dc_time.h"
 
 #define ERR_SYSERR   -1
 #define ERR_DIRERR   -2
@@ -512,6 +513,8 @@ struct dirent *readdir(DIR *dirp)
 void cdfs_init()
 {
   register unsigned long p, x;
+
+  usleep(1000);
 
   /* Reactivate GD-ROM drive */
 
