@@ -32,15 +32,16 @@ static char replybuf[2048];
 static int replylen;
 static struct netconn *cmd_conn = NULL;
 
-static void virtcdhdlr(char *pkt, int size)
+static void virtcdhdlr(struct netbuf *buf)
 {
+  u16_t size = netbuf_len(buf);
   if(size >= 8) {
     struct { int serial, result; } res;
-    memcpy(&res, pkt, 8);
+    netbuf_copy_partial(buf, &res, 8, 0);
     if(res.serial == cmd.serial) {
       cmd.result = res.result;
       if(size > 8)
-	memcpy(replybuf, ((char *)pkt)+8, size-8);
+	netbuf_copy_partial(buf, replybuf, size-8, 8);
       replylen = size-8;
     }
   }
@@ -63,10 +64,7 @@ static int docmd(int command, const void *data, int sz)
     netconn_send(cmd_conn, buf);
     if(sys_arch_mbox_fetch(cmd_conn->recvmbox, &r, 200) && r)
       do {
-	void *d;
-	u16_t l;
-	if(netbuf_data(r, &d, &l)==ERR_OK)
-	  virtcdhdlr(d, l);
+	virtcdhdlr(r);
 	netbuf_delete(r);
       } while(cmd.result != -1 &&
 	      sys_arch_mbox_fetch(cmd_conn->recvmbox, &r, 1) && r);
