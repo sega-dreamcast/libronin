@@ -748,12 +748,7 @@ extern Void_t*     sbrk();
 */
 
 #ifdef DC
-// Available on DC: 0xC00000 byte
-
-// Kludge since sYSMALLOc fails on requests > 2*pagesize. Leave the
-// printfs in until that is solved, then go to something sensible like
-// 4KiB. (Note that ~1MiB remains unallocated until this is fixed.)
-#define malloc_getpagesize 0xc00000/2
+#define malloc_getpagesize 4096
 #endif
 
   /*

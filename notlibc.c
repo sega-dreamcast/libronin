@@ -63,18 +63,28 @@ void exit(int rcode)
  * 8c f00000  stack end       
  * 8c fffffc  stack start     1 Mb
  */
-#define MEMSTART 0x8c300000
+extern char end[];
+#define MEMSTART ((int)end)
 #define MEMEND   0x8cf00000
 static int total_size;
 
 #ifndef OLDMALLOC
 static int end_break=MEMSTART;
 
-int brk( void *ebdds ){reportf(" brk(%p) hardcoded fail\n", ebdds); return -1;}
+int brk( void *ebdds )
+{
+  int new_break = (int)ebdds;
+  if(new_break >= MEMSTART && new_break <= MEMEND) {
+    end_break = new_break;
+    return 0;
+  } else
+    return -1;
+}
 
 void *sbrk( int incr )
 {
-  int newend_break = end_break + incr + 32-incr%32;
+  int prior_break = end_break;
+  int newend_break = prior_break + incr;
   
   if(newend_break > MEMEND) {
     reportf("sbrk: Out of allocatable memory! (incr = %d)\n", incr);
@@ -91,7 +101,7 @@ void *sbrk( int incr )
           (MEMEND-end_break)/1024, 
           end_break);
 
-  return (void *)(end_break);
+  return (void *)(prior_break);
 }
 
 
@@ -104,9 +114,12 @@ void *malloc(size_t size)
   int keep;
   total_size += size;
 
+  if(mallocpointer & 31)
+    mallocpointer += 32-(mallocpointer&31);
+
   /* Point somewhere else next time... */
   keep=mallocpointer;
-  mallocpointer += size + 32-size%32;
+  mallocpointer += size;
 
   reportf("malloc [%d %d %d -> %p]\r\n",
           size/1024,
