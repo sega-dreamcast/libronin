@@ -259,3 +259,7 @@ EXTERN_C int stop_cdda(void)
   return -1;
 }
 
+EXTERN_C struct TOC *cdfs_gettoc()
+{
+  return NULL;
+}
