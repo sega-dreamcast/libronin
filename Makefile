@@ -37,7 +37,7 @@ endif
 ifeq "$(NETCD)" "1"
 OBJECTS += netcd.o
 else
-OBJSCTE += cdfs.o
+OBJECTS += cdfs.o
 endif
 
 ifeq "$(NETSERIAL)$(NETCD)" "00"
@@ -52,6 +52,7 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_gtext.$(TYPE) \
 	   examples/ex_showpvr.$(TYPE) \
 	   examples/ex_malloc.$(TYPE) \
+	   examples/ex_purupuru.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
@@ -102,6 +103,9 @@ test-control: examples/ex_control.elf
 
 test-malloc: examples/ex_malloc.elf
 	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_malloc.$(TYPE)
+
+test-purupuru: examples/ex_purupuru.elf
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_purupuru.$(TYPE)
 
 
 #ARM sound code
