@@ -1,6 +1,3 @@
-#ifndef _SOUND_H
-#define _SOUND_H been_here_before
-
 /*
  * Sound
  */
@@ -19,9 +16,6 @@ struct buffer
 extern struct buffer buff;
 
 #define SOUNDSTATUS ((volatile struct soundstatus *)(void *)(0xa0800000+SOUNDSTATUS_ADDR))
-#define MPEG_BUFF(X) \
-((volatile struct mpeg_buffer *)(void *) \
- (0xa0800000+MPEG_BASE_ADDR+(sizeof(struct mpeg_buffer)*(X))))
 
 extern int sound_device_open;
 extern int fillpos;
@@ -33,7 +27,7 @@ void do_sound_command(int cmd);
 int read_sound_int(volatile int *p);
 void stop_sound();
 void start_sound();
-void ronin_process_sound_messages();
 END_EXTERN_C
 
-#endif //_SOUND_H
+
+
