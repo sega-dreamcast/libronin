@@ -129,7 +129,7 @@ void *sbrk( size_t incr )
 }
 
 
-#else /* REALMALLOC */
+#else
 static int last;
 static int mallocpointer=MEMSTART;
 
@@ -169,7 +169,7 @@ void free(void *ptr)
   } else
     reportf("Free called with non-last block (%p). Wasting some memory.\n", ptr);
 }
-#endif /* REALMALLOC */
+#endif
 
 static unsigned int low_read_time()
 {

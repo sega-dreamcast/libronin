@@ -1,5 +1,7 @@
 #ifndef OLDMALLOC
+#ifdef MALLOCDEBUG
 #include "report.h"
+#endif
 /*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain.  Use, modify, and
@@ -1572,7 +1574,9 @@ Void_t* public_mALLOc(size_t bytes) {
   if (MALLOC_POSTACTION != 0) {
   }
 
+#ifdef MALLOCDEBUG
   reportf("m -> %p\n");
+#endif
 
   return m;
 }
@@ -2883,7 +2887,9 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
   }
 #endif
 
+#ifdef MALLOCDEBUG
   reportf("sYSMALLOc(%d, malloc_state av)\n", nb);
+#endif
 
   /* Record incoming configuration of top */
 
@@ -2939,7 +2945,6 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
   */
 
   
-  report("ä\n");
   if (size > 0) 
     brk = (char*)(MORECORE(size));
 
@@ -2985,7 +2990,6 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
   }
 #endif
 
-  report("ö\n");
   if (brk != (char*)(MORECORE_FAILURE)) {
     av->sbrked_mem += size;
 
@@ -2993,9 +2997,7 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
       If MORECORE extends previous space, we can likewise extend top size.
     */
     
-    report("a\n");
     if (brk == old_end && snd_brk == (char*)(MORECORE_FAILURE)) {
-      report("b\n");
       set_head(old_top, (size + old_size) | PREV_INUSE);
     }
     
@@ -3086,10 +3088,8 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
       }
       
       /* Adjust top based on results of second sbrk */
-      report("c\n");
       if (snd_brk != (char*)(MORECORE_FAILURE)) {
         av->top = (mchunkptr)aligned_brk;
-        report("d\n");
         set_head(av->top, (snd_brk - aligned_brk + correction) | PREV_INUSE);
         av->sbrked_mem += correction;
      
@@ -3102,7 +3102,6 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
           two to make sizes and alignments work out.
         */
    
-        report("e\n");
         if (old_size != 0) {
           /* 
              Shrink old_top to insert fenceposts, keeping size a
@@ -3110,7 +3109,6 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
              enough space in old_top to do this.
           */
           old_size = (old_size - 3*SIZE_SZ) & ~MALLOC_ALIGN_MASK;
-          report("f\n");
           set_head(old_top, old_size | PREV_INUSE);
           
           /*
@@ -3148,8 +3146,10 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
     /* finally, do the allocation */
     p = av->top;
     size = chunksize(p);
+#ifdef MALLOCDEBUG
     reportf("0. p -> %p\tsize: %d\tnb+MINSIZE: %d\n", p, size, (nb + MINSIZE));
     reportf("   oldtop: %d\n", old_top);
+#endif
 
     /* check that one of the above allocation paths succeeded */
     if ((unsigned long)(size) >= (unsigned long)(nb + MINSIZE)) {
@@ -3160,7 +3160,9 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
       set_head(remainder, remainder_size | PREV_INUSE);
       check_malloced_chunk(p, nb);
 
+#ifdef MALLOCDEBUG
       reportf("1. p -> %p\n", p);
+#endif
       return chunk2mem(p);
     }
   }
@@ -3168,7 +3170,9 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
   /* catch all failure paths */
   MALLOC_FAILURE_ACTION;
   
+#ifdef MALLOCDEBUG
   report("sYSMALLOc() failed.\n");
+#endif
   return 0;
 }
 
@@ -3279,7 +3283,9 @@ Void_t* mALLOc(size_t bytes)
     aligned.
   */
 
+#ifdef MALLOCDEBUG
   reportf("mALLOc(%d)\n", bytes);
+#endif
 
   checked_request2size(bytes, nb);
 
