@@ -66,7 +66,7 @@ most: crt0.o libronin.a libz.a
 all: crt0.o libronin.a libronin-noserial.a cleanish libz.a
 
 libronin.a: $(OBJECTS) arm_sound_code.h Makefile
-	$(AR) rs $@ $(OBJECTS)
+	rm -f $@ && $(AR) rs $@ $(OBJECTS)
 
 noserial-dummy: $(OBJECTS) arm_sound_code.h Makefile
 	@echo Dummy done.
@@ -75,7 +75,7 @@ libronin-noserial.a: libronin.a
 	$(MAKE) cleanish
 	rm -f libronin-serial.a
 	$(MAKE) CCFLAGS="$(CCFLAGS) -DNOSERIAL" CFLAGS="$(CCFLAGS) -DNOSERIAL" noserial-dummy
-	$(AR) rs $@ $(OBJECTS)
+	rm -f $@ && $(AR) rs $@ $(OBJECTS)
 
 libz.a:
 	cd zlib; $(MAKE) libz.a
@@ -163,7 +163,7 @@ arm_sound_code.bin: arm_sound_code.elf
 	arm-elf-objcopy -O binary $< $@
 
 arm_sound_code.elf: arm_startup.o arm_sound_code.o
-	arm-elf-gcc $(ARMFLAGS) -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -Llibmad -lmad -lgcc
+	arm-elf-gcc $(ARMFLAGS) -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -lgcc
 
 arm_sound_code.o: arm_sound_code.c soundcommon.h
 	arm-elf-gcc -c -I libmad -Wall $(ARMFLAGS) -Wundefined   -o $@ $<
