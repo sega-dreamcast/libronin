@@ -1,4 +1,4 @@
-#include "time.h"
+#include "dc_time.h"
 
 //#define TIMER_HZ 48828
 

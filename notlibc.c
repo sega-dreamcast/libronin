@@ -4,11 +4,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <time.h>
-//FIXME: WTF?!
-typedef      long            time_t; /* time of day in seconds */
 #include "common.h"
+#include "dc_time.h"
 #include "notlibc.h"
 
 int errno = 0;

@@ -33,7 +33,7 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 all: libronin.a crt0.o
 
 libronin.a: $(OBJECTS) arm_sound_code.h Makefile
-	$(AR) rcs $@ $(OBJECTS)
+	$(AR) rs $@ $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) libronin.a $(EXAMPLES) arm_sound_code.h \

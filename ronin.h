@@ -5,7 +5,7 @@
 #include <ronin/report.h>
 #include <ronin/maple.h>
 #include <ronin/notlibc.h>
-#include <ronin/time.h>
+#include <ronin/dc_time.h>
 #include <ronin/cdfs.h>
 #include <ronin/vmsfs.h>
 #include <ronin/video.h>
