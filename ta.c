@@ -316,7 +316,7 @@ void ta_begin_frame()
     regs[0x124/4] = tbuf;
     regs[0x12c/4] = tbuf-(blb->ta_extra_segments<<6);
     regs[0x128/4] = cmdl;
-    regs[0x130/4] = cmdl+512*1024; /* 0.5M Object Buffer */
+    regs[0x130/4] = cmdl+blb->ta_cmdlistsize;
     regs[0x138/4] = cmdl;
     regs[0x13c/4] = ((blb->ta_tileh-1)<<16)|(blb->ta_tilew-1);
     regs[0x140/4] = 0x00100202;
@@ -444,6 +444,7 @@ void ta_init_renderstate()
     struct ta_buffers *b = &ta_buffers[i];
 
     char *vmem_ptr = (void *)(i? 0xa5400000 : 0xa5000000);
+    char *vmem_end = vmem_ptr + 0x00200000;
 
     b->fb_base = vmem_ptr;
     vmem_ptr += b->fb_modulo * b->fb_lines;
@@ -464,6 +465,7 @@ void ta_init_renderstate()
     vmem_ptr = ALIGN_VMEM(vmem_ptr);
 
     b->ta_cmdlist = vmem_ptr;
+    b->ta_cmdlistsize = vmem_end - vmem_ptr;
 
     b->ta_tiles =
       ta_create_tile_descriptors(b->ta_tiledescr, b->ta_tilebuf,

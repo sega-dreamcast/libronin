@@ -108,10 +108,10 @@ struct modifier_list {
 #define TA_POLYMODE2_CLAMP_COLOURS  0x00200000
 #define TA_POLYMODE2_ENABLE_ALPHA   0x00100000
 #define TA_POLYMODE2_DISABLE_TEXTURE_TRANSPARENCY 0x00080000
-#define TA_POLYMODE2_TEXTURE_FLIP_U   0x00040000
-#define TA_POLYMODE2_TEXTURE_FLIP_V   0x00020000
-#define TA_POLYMODE2_TEXTURE_CLAMP_U  0x00010000
-#define TA_POLYMODE2_TEXTURE_CLAMP_V  0x00008000
+#define TA_POLYMODE2_TEXTURE_FLIP_U   0x00080000
+#define TA_POLYMODE2_TEXTURE_FLIP_V   0x00040000
+#define TA_POLYMODE2_TEXTURE_CLAMP_U  0x00020000
+#define TA_POLYMODE2_TEXTURE_CLAMP_V  0x00010000
 #define TA_POLYMODE2_TRILINEAR_FILTER 0x00004000
 #define TA_POLYMODE2_BILINEAR_FILTER  0x00002000
 #define TA_POLYMODE2_MIPMAP_D_0_25    (1<<8)
@@ -219,6 +219,7 @@ extern struct ta_buffers {
 
   /* initialized by ta_init_renderstate() */
   void *ta_cmdlist, *ta_tiledescr, *ta_tilebuf, *ta_tiles;
+  int ta_cmdlistsize;
   void *fb_base;
 } ta_buffers[2];
 
