@@ -161,7 +161,7 @@ _apply_matrix:
 	! vectors before storing them in the result array
 	!
 	! r4 = pointer to a source set of 3D vectors (n * 3 floats)
-	! r5 = pointer to a destination set of 3D vectors ( - " - )
+	! r5 = pointer to a destination set of 3D vectors - ( -''-)
 	! r6 = number of vectors to transform
 
 _transform_coords:
