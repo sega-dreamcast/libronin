@@ -25,6 +25,21 @@ void dc_clrscr(int color);
 void dc_multibuffer_set(int show, int draw);
 END_EXTERN_C
 
+#define CABLE_VGA 2
+#define CABLE_RGB 1
+#define CABLE_COM 3
+
+/*
+   	pixel mode (0=RGB555, 1=RGB565, 3=RGB888)
+#define 
+*/
+
+#define LOWRES 0
+#define HIGHRES_NOLACE 1
+#define HIGHRES 2
+
+
+
 #define C_RED   0xff0000
 #define C_GREEN 0x00ff00
 #define C_BLUE  0x0000ff

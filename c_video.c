@@ -120,8 +120,15 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   static int hpos=0xa4;
   static int hvcounter31=0x020c0359; /* 60Hz Lace */
   static int hvcounter15=0x01060359; /* 60Hz Nonlace */
-  static int hvcounter3150=0x0270035f; /* 50Hz Lace */
-  static int hvcounter1550=0x0138035f; /* 50Hz Nonlace */
+  
+  //Wrong order lace...
+   static int hvcounter3150=0x0270035f; /* 50Hz Lace Modern */
+   static int hvcounter1550=0x0138035f; /* 50Hz Nonlace */
+
+
+// static int hvcounter3150=0x0271035f; /* 50Hz Lace 0.9.4 */
+  //Makes the top part of the screen shake like crazy but seems to
+  //eliminate the wrong order lace problem. Also makes it NTSC...
   static int hborder=0x007e0345;
   int laceoffset=0;
 
@@ -138,10 +145,10 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   *(int *)(videobase+0x44)=0;
   *(int *)(videobase+0xd0)=0;
 
-  if(!(cabletype&2))
+  if(!(cabletype & CABLE_VGA))
     hz50 = pal = 0;
 
-  if(res==0 || res==1)
+  if(res==LOWRES || res==HIGHRES_NOLACE)
     hvcounter=(hz50? hvcounter1550 : hvcounter15);
   else
     hvcounter=(hz50? hvcounter3150 : hvcounter31);
@@ -158,9 +165,9 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   // Set pixel clock and colour mode
   mode = (mode<<2)/*+1*/;
   lines = 240;			// Non-VGA screen has 240 display lines
-  if(!(cabletype&2))		// VGA
+  if(!(cabletype & CABLE_VGA))		// VGA
   {
-    if(res<2 && !tvmode)
+    if(res<HIGHRES && !tvmode)
       mode+=2;
 
     hvcounter=hvcounter31;
@@ -172,14 +179,14 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
 
   *(int *)(videobase+0x50)=0;	// Set video base address
   // Video base address for short fields should be offset by one line
-  if(res==2 && (cabletype&2))
+  if(res==HIGHRES && (cabletype & CABLE_VGA))
     *(int *)(videobase+0x54)=640<<shift;// Set short fields video base address
   else
     *(int *)(videobase+0x54)=0;// Set short fields video base address
 
   // Set screen size, modulo, and interlace flag
   videoflags=1<<8;			// Video enabled
-  if(res==0)
+  if(res==LOWRES)
     words_per_line=(320/4)<<shift;	// Two pixels per words normally
   else
     words_per_line=(640/4)<<shift;
@@ -187,18 +194,18 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
 
   fb_devconfig.dc_lace = 0;
 
-  if(!(cabletype&2))	// VGA => No interlace
+  if(!(cabletype & CABLE_VGA))	// VGA => No interlace
   {
 #if 0
-    if(res<2 && !tvmode)
+    if(res<HIGHRES && !tvmode)
       modulo+=words_per_line;	//Render black on every other line.
 #endif
   } else {
-    if(res!=1)
+    if(res!=HIGHRES_NOLACE)
       modulo+=words_per_line;	//Skip the black part (lores) or
                                 //add one line to offset => display
 				//every other line (hires)
-    if(res==2) {
+    if(res==HIGHRES) {
       videoflags|=1<<4; //enable LACE 
       fb_devconfig.dc_lace = 1;
     }
@@ -213,8 +220,8 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
       videoflags|=1<<7;	//50Hz
 #else
     /*     videoflags|=(pal&3)<<6; */
-    if(cabletype&2)
-      videoflags|=(pal? 0x80 : 0x40);
+    if(cabletype & CABLE_VGA)
+      videoflags|=0x40/*(pal? 0xc0 : 0x40)*/;
 #endif
   }
 
@@ -223,19 +230,19 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
 
   // Set vertical pos and border
 
-  if(!(cabletype&2)) //VGA
+  if(!(cabletype & CABLE_VGA)) //VGA
     voffset += 40;
   else
-    voffset += (hz50? 18 : 18);
+    voffset += (hz50? 45 : 18);
 
-#if 0    
-  if(res==2 && pal)       // PAL Lace 
+  if(res==HIGHRES && pal)       // PAL Lace 
     laceoffset = 0;
-  else if(res==2 && hz50) // NTSC Lace 50Hz (tested on EU,JP machine. strange)
+#if 0    
+  else if(res==HIGHRES && hz50) // NTSC Lace 50Hz (tested on EU,JP machine. strange)
     laceoffset = 0;
 #endif
 
-  if(res<2 && (cabletype&2))
+  if(res<HIGHRES && (cabletype & CABLE_VGA))
     laceoffset=-1;
 
   fb_devconfig.dc_vidx = hpos;
@@ -249,13 +256,13 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   *(int *)(videobase+0xd8)=hvcounter;	// HV counter
   *(int *)(videobase+0xd4)=hborder;	// Horizontal border
   *(int *)(videobase+0xc8)=hborder<<16; // H sync
-  if(!(cabletype&2))
+  if(!(cabletype & CABLE_VGA))
     attribs=0x1f;
   else if(hz50)
     attribs=0x3d;
   else
     attribs=0x16;
-  if(res==0)
+  if(res==LOWRES)
     attribs=((attribs<<8)+1)<<8;		//X-way pixel doubler
   else
     attribs=attribs<<16;
@@ -263,41 +270,41 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   *(int *)(videobase+0xe8)=attribs;	// Screen attributes
 
 #if 0
-  if(!(cabletype&2))
+  if(!(cabletype & CABLE_VGA))
     *(int *)(videobase+0xe0)=(0x0f<<22)|(793<<12)|(3<<8)|0x3f;
   else {
     attribs = 0x3f;
     if(hz50)
       attribs |= 5<<8;
     else
-      attribs |= (res==2? 6:3)<<8;
+      attribs |= (res==HIGHRES? 6:3)<<8;
     if(hz50)
-      attribs |= (res==2? 362:799)<<12;
+      attribs |= (res==HIGHRES? 362:799)<<12;
     else
-      attribs |= (res==2? 364:793)<<12;
+      attribs |= (res==HIGHRES? 364:793)<<12;
     attribs |= 0x1f<<22;
     *(int *)(videobase+0xe0)=attribs;
   }
 #else
-  *(int *)(videobase+0xe0)=((cabletype&2)? (hz50? 0x7d6a53f : 0x7d6c63f) : 0x3f1933f);
+  *(int *)(videobase+0xe0)=((cabletype & CABLE_VGA)? (hz50? 0x7d6a53f : 0x7d6c63f) : 0x3f1933f);
 #endif
 
 #if 0
   vpos = (hz50? 310:260);
-  if(!(cabletype&2))
+  if(!(cabletype & CABLE_VGA))
     vpos = 510;
 #endif
 
   /* Set up vertical blank event */
 #if 0
   vpos = 242+voffset;
-  if(!(cabletype&2))
+  if(!(cabletype & CABLE_VGA))
     vpos = 482+voffset;
 #endif
   *(int *)(videobase+0xcc)=((voffset-2)<<16)|(voffset+lines+2);
 
   // Select RGB/CVBS
-  if(cabletype&1) //!rgbmode
+  if(cabletype&CABLE_RGB) //!rgbmode
     tmp=3;
   else
     tmp=0;
@@ -379,7 +386,7 @@ void dc_reset_screen( int hires, int lace )
     TA_POLYMODE2_MIPMAP_D_1_00|TA_POLYMODE2_TEXTURE_REPLACE|
     TA_POLYMODE2_U_SIZE_512|TA_POLYMODE2_V_SIZE_512;
 
-  if((cable&2) || lace)
+  if(!(cable & CABLE_VGA) || lace)
     tvmode = 0;
   
   if(tvmode) {
