@@ -3,8 +3,6 @@
  * Rudimentary aproximations and stubs for various libc functions. 
  */
 
-#warning "Expect and ignore one warnings each for __isnan and time."
-
 //#include <unistd.h> /* (s)brk() definitions */
 //#include <stddef.h>   /* for size_t */
 //#include <stdlib.h>
@@ -15,6 +13,7 @@
 #include "notlibc.h"
 #include "report.h"
 #include "cdfs.h"
+#include "serial.h"
 
 int errno = 0;
 
@@ -30,16 +29,16 @@ void _Console_Putc( char c )
 
 void exit(int rcode);
 
+#if DC_GLIBC
 /* Stuff needed to make the binary smaller (some 2Mb or so...)
    remember to link in libronin before libc and libgcc to avoid
    multiple definition conflicts. */
-#if 0
 static FILE _stderr;
 FILE *stderr = &_stderr;
 #endif
 int atexit(void (*function)(void)){ return 0; }
 void abort(){ report("aborted\n"); exit(1); }
-#if 0
+#ifdef DC_GLIBC
 int sprintf(char *str, const char *format, ...)
  {report("sprintf ignored\n");return 0;}
 int fprintf(FILE *stream,  const  char  *format, ...)
@@ -48,6 +47,7 @@ int printf(const char  *format, ...){report("printf ignored\n");return -1;}
 int fputs( const char *s, FILE *stream ){report("fputs ignored\n"); return -1;}
 int __write(){report("__write ignored\n"); return -1;}
 FILE *fopen(const char *f, const char *m){report("fopen ignored\n"); return 0;}
+#warning "Ignore one warnings for __isnan."
 int __isnan(){} //Expect warning.
 void __assert_fail(char *message){report("__asser_fail ignored\n");}
 #endif
@@ -184,6 +184,7 @@ static unsigned int low_read_time()
   return ((rtc[0]&0xffff)<<16)|(rtc[1]&0xffff);
 }
 
+#warning "Ignore one warnings for time:new."
 time_t time(time_t *tloc)
 {
   unsigned int old, new; //Expect stupid warning.
