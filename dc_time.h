@@ -8,6 +8,7 @@
 #include <time.h>
 #include "common.h"
 #define USEC_TO_TIMER(x) (((x)*100)>>11)
+#define TIMER_TO_USEC(x) (((x)<<11)/100)
 START_EXTERN_C
 unsigned long Timer( );
 void usleep( unsigned int usecs );
