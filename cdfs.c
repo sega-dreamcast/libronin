@@ -13,7 +13,7 @@
 #define ERR_NODISK   -6
 #define ERR_DISKCHG  -7
 
-#define NUM_BUFFERS   8
+#define NUM_BUFFERS  16
 
 static struct TOC *current_toc = NULL;
 
@@ -427,6 +427,26 @@ int read(int fd, void *buf, unsigned int nbyte)
   };
 }
 
+static int read_cached(int fd, void *buf, unsigned int nbyte)
+{
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD || nbyte != 2048 ||
+     (fh[fd-MIN_FD].loc & 2047))
+    return ERR_PARAM;
+  else if(fh[fd-MIN_FD].loc>=fh[fd-MIN_FD].len)
+    return 0;
+  else {
+    unsigned char *sec;
+    int r = read_cached_sector(&sec, fh[fd-MIN_FD].sec0+
+			       (fh[fd-MIN_FD].loc>>11));
+    if(r>=0) {
+      memcpy(buf, sec, nbyte);
+      fh[fd-MIN_FD].loc += nbyte;
+      return nbyte;
+    }
+    return r;
+  };
+}
+
 long int lseek(int fd, long int offset, int whence)
 {
   if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD)
@@ -500,9 +520,12 @@ DIR *opendir(const char *dirname)
 
 int closedir(DIR *dirp)
 {
-  int res = close(dirp->dd_fd);
-  free(dirp);
-  return res;
+  if(dirp) {
+    int res = close(dirp->dd_fd);
+    free(dirp);
+    return res;
+  } else
+    return -1;
 }
 
 int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **res)
@@ -518,7 +541,7 @@ int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **res)
 	    (l=((unsigned char *)dirp->dd_buf)[dirp->dd_loc]) == 0 ||
 	    dirp->dd_loc + l > dirp->dd_size) {
 	/* Need to read more dir data */
-	if((r = read(dirp->dd_fd, dirp->dd_buf, 2048))<=0) {
+	if((r = read_cached(dirp->dd_fd, dirp->dd_buf, 2048))<=0) {
 	  *res = NULL;
 	  return (r? r : ERR_NOFILE);
 	}
