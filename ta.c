@@ -172,8 +172,8 @@ void ta_begin_dlist(void *list, unsigned int size)
   }
   ta_target_dlist = SQ_MAKE_ADDRESS(list);
   ta_dlist_size = ta_dlist_left = size;
-  SQ_WAIT_STORE_QUEUES();
   QACR0 = QACR1 = ((((unsigned int)list)>>26)<<2)&0x1c;
+  SQ_WAIT_STORE_QUEUES();
 }
 
 unsigned int ta_end_dlist()
