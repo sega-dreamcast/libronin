@@ -17,11 +17,23 @@ struct soundstatus {
   int ring_length;
 };
 
+struct mpeg_buffer
+{
+  int size;
+  char buffer[2048];
+};
+#define NUM_MPEG_BUFFERS 128
+
+
 #define SOUNDSTATUS_ADDR (0xff80)
-#define RING_BASE_ADDR (0x10000)
+
+#define RING_BASE_ADDR (0x180000)
+#define MPEG_BASE_ADDR (0x100000)
+#define MPEG_BUFF(X) ((volatile struct mpeg_buffer *)(void *)(MPEG_BASE_ADDR+(sizeof(struct mpeg_buffer)*(X))))
 
 #define MODE_PAUSE 0
 #define MODE_PLAY  1
+#define MODE_MPEG  2
 
 #define CMD_SET_MODE(n) (n)
 
