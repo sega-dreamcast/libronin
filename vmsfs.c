@@ -593,8 +593,8 @@ int vmsfs_open_file(struct superblock *super, const char *name,
   if(vmsfs_next_named_dir_entry(&tmpiter, &tmpentry, name)) {
     int loc = tmpentry.entry[2]|(tmpentry.entry[3]<<8);
     int header_loc = loc;
-    int header_read = 0;
-    int header_sz, tmpsz;
+    unsigned int header_read = 0;
+    unsigned int header_sz, tmpsz;
     int i = tmpentry.entry[0x1a]|(tmpentry.entry[0x1b]<<8);
     int header_pos = i*super->info->blocksz;
     file->loc0 = loc;
@@ -652,9 +652,9 @@ int vmsfs_open_file(struct superblock *super, const char *name,
 int vmsfs_read_file(struct vms_file *file, unsigned char *buf,
 		    unsigned int cnt)
 {
-  int bleft;
+  unsigned int bleft;
 
-  if(cnt > file->left)
+  if((int)cnt > file->left)
     //FIXME: errno here. Not important though.
     return 0;
 
@@ -676,7 +676,7 @@ int vmsfs_read_file(struct vms_file *file, unsigned char *buf,
   if(!cnt)
     return 1;
 
-  while(cnt >= file->super->info->blocksz) {
+  while(cnt >= (unsigned)file->super->info->blocksz) {
     int newloc = vmsfs_get_fat(file->super, file->loc);
     if(newloc == 0xfffa || newloc == 0xfffc ||
        !vmsfs_read_block(file->super->info, newloc, buf)) {
@@ -793,7 +793,7 @@ int vmsfs_create_file(struct superblock *super, const char *name,
     return 0;
   }
   while(blkcnt--) {
-    int n, blkfill = super->info->blocksz;
+    unsigned int n, blkfill = super->info->blocksz;
     unsigned char *blkptr = tmpblk;
     while(blkfill > 0) {
       if(headersize) {
