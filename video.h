@@ -1,3 +1,6 @@
+#ifndef _VIDEO_H
+#define _VIDEO_H been_here_before
+
 /* 
  * Functions used to setup and operate on the framebuffer and tile
  * accellerator.
@@ -66,3 +69,5 @@ struct _fb_devconfig{
   //	struct rasops_info rinfo;
 };
 extern struct _fb_devconfig fb_devconfig;
+
+#endif //_VIDEO_H

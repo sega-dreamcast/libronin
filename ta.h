@@ -1,3 +1,6 @@
+#ifndef _TA_H
+#define _TA_H been_here_before
+
 /* 
  * Functions for accessing the tile accellerator.
  * FIXME: Make sure they are accessable from C++.
@@ -219,3 +222,4 @@ extern struct ta_buffers {
   void *fb_base;
 } ta_buffers[2];
 
+#endif //_TA_H

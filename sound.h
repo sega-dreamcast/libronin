@@ -1,3 +1,6 @@
+#ifndef _SOUND_H
+#define _SOUND_H been_here_before
+
 /*
  * Sound
  */
@@ -33,5 +36,4 @@ void start_sound();
 void ronin_process_sound_messages();
 END_EXTERN_C
 
-
-
+#endif //_SOUND_H

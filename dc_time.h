@@ -1,3 +1,6 @@
+#ifndef _DC_TIME_H
+#define _DC_TIME_H been_here_before
+
 /*
  * Time and timer-related functions.
  */
@@ -9,3 +12,5 @@ START_EXTERN_C
 unsigned long Timer( );
 void usleep( unsigned int usecs );
 END_EXTERN_C
+
+#endif //_DC_TIME_H

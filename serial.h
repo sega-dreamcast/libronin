@@ -1,3 +1,6 @@
+#ifndef _SERIAL_H
+#define _SERIAL_H been_here_before
+
 /*
  * Funktions for managing the DC serial port. Should not normally be
  * used in the final product, but only for debugging.
@@ -12,3 +15,5 @@ int  serial_getc();
 int  serial_getc_blocking();
 void serial_flush();
 END_EXTERN_C
+
+#endif //_SERIAL_H

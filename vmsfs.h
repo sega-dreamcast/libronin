@@ -1,3 +1,6 @@
+#ifndef _VMSFS_H
+#define _VMSFS_H been_here_before
+
 /*
  * VMS fs
  */
@@ -107,3 +110,4 @@ int vmsfs_create_file(struct superblock *super, char *name,
 END_EXTERN_C
 
 
+#endif //_VMSFS_H

@@ -1,3 +1,5 @@
+#ifndef _CDFS_H
+#define _CDFS_H been_here_before
 /*
  * ISO 9660 fs 
  */
@@ -38,3 +40,4 @@ struct dirent *readdir(DIR *dirp);
 void cdfs_init(void);
 END_EXTERN_C
 
+#endif //_CDFS_H

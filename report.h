@@ -1,3 +1,6 @@
+#ifndef _REPORT_H
+#define _REPORT_H been_here_before
+
 /*
  * Functions used for debug output through the serial
  * interface. Dependent on the serial functions.
@@ -9,3 +12,5 @@ void report(const char *str);
 void reportf(const char *fmt, ...);
 char *itoa(int x);
 END_EXTERN_C
+
+#endif //_REPORT_H

@@ -1,3 +1,6 @@
+#ifndef _MAPLE_H
+#define _MAPLE_H been_here_before
+
 /* Maple Bus command and response codes */
 
 #define MAPLE_RESPONSE_FILEERR -5
@@ -106,3 +109,20 @@ void maple_vbl_handler(void);
 #if defined(__cplusplus) || defined(c_plusplus)
 }
 #endif
+
+static __inline int getimask(void)
+{
+  register unsigned int sr;
+  __asm__("stc sr,%0" : "=r" (sr));
+  return (sr >> 4) & 0x0f;
+}
+
+static __inline void setimask(int m)
+{
+  register unsigned int sr;
+  __asm__("stc sr,%0" : "=r" (sr));
+  sr = (sr & ~0xf0) | (m << 4);
+  __asm__("ldc %0,sr" : : "r" (sr));
+}
+
+#endif //_MAPLE_H

@@ -1,3 +1,7 @@
+#ifndef _SOUNDCOMMON_H
+#define _SOUNDCOMMON_H been_here_before
+
+
 /*
  * This file is included both on ARM and SH
  */
@@ -86,3 +90,5 @@ struct message_buffer
 /* #endif */
 
 #define STEREO_OFFSET (RING_BUFFER_SAMPLES+256)
+
+#endif //_SOUNDCOMMON_H
