@@ -167,8 +167,10 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   lines = 240;			// Non-VGA screen has 240 display lines
   if(!(cabletype & CABLE_VGA))		// VGA
   {
-    if(res<HIGHRES && !tvmode)
+    if(res<HIGHRES && !tvmode) {
       mode+=2;
+      laceoffset++;
+    }
 
     hvcounter=hvcounter31;
 
