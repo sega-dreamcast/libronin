@@ -1,6 +1,8 @@
 #ifndef _VMSFS_H
 #define _VMSFS_H been_here_before
 
+#include "common.h"
+
 /*
  * VMS fs
  */
