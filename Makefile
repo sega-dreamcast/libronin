@@ -27,6 +27,7 @@ CCFLAGS = $(OPTIMISE) $(CPUFLAGS) $(EXAMPLEFLAGS) -DDC -DDREAMCAST
 
 CFLAGS = $(CCFLAGS)
 
+DISTHEADERS=cdfs.h common.h dc_time.h gddrive.h gfxhelper.h gtext.h maple.h matrix.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h
 
 # begin lwIP
 
@@ -143,7 +144,6 @@ clean: cleanish
 examples: lib/libronin.a $(EXAMPLES)
 
 ifeq "$(NETSERIAL)$(NETCD)" "00"
-DISTHEADERS=cdfs.h common.h dc_time.h gddrive.h gfxhelper.h gtext.h maple.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h
 dist: $(DISTHEADERS) 
 	@$(MAKE) clean && \
 	$(MAKE) all && \
