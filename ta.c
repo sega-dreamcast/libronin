@@ -507,6 +507,17 @@ void ta_disable_irq()
 static unsigned char *tx_ptr = (unsigned char*)0xa4400000, *tx_last=0;
 extern void reportf(const char *fmt, ...);
 
+void *ta_txmark()
+{
+  return tx_ptr;
+}
+
+void ta_txrelease(void *ptr)
+{
+  tx_ptr = ptr;
+  tx_last = 0;
+}
+
 void *ta_txalloc(unsigned int size)
 {
 
