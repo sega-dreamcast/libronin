@@ -235,5 +235,30 @@ _ta_commit_vertex:
 sq_address:
 	.long	  0xe0000000
 
+
+
+	! sdivsi3_i4 is borken in libgcc, it clobbers the FR bit
+	! in FPSCR.  This one doesn't.
+
+	.globl ___sdivsi3_i4
+	
+___sdivsi3_i4:	
+        sts fpscr,r2
+        mov #8,r3
+        swap.w r3,r3
+	or r2,r3
+        lds r3,fpscr
+        lds r4,fpul
+        float fpul,dr0
+        lds r5,fpul
+        float fpul,dr2
+        fdiv dr2,dr0
+        ftrc dr0,fpul
+        rts
+        lds r2,fpscr
+
+	
 	.end
+
+
 
