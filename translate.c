@@ -244,7 +244,7 @@ void init_translations()
 
   if( ( dp = opendir( "LOCALE/" ) ) )
     while ( ( e = readdir( dp ) ) )
-      if( e->d_size && !strcmp( e->d_name+strlen( e->d_name )-4, ".TXT" ) )
+      if( e->d_size && !stricmp( e->d_name+strlen( e->d_name )-4, ".TXT" ) )
       {
 	char *p;
 	char fn[64];
