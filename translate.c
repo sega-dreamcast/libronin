@@ -14,7 +14,7 @@
 
 #include "translate.h"
 #define NUM_LANGUAGES 20
-#define NUM_STRINGS  100
+#define NUM_STRINGS  128
 #define ENGLISH        0
 
 static struct language
