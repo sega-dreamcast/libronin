@@ -1,7 +1,11 @@
-libronin 0.1
+libronin 0.2
 
 This is alpha software, and there is no documentation. You are on your
 own at the moment. If there is something you wonder about the authors
 can probably answer if you ask nicely.
 
 See COPYING for license information.
+
+
+zlib is included in this archive for convenience, see ZLIB_README for
+more information.

@@ -63,7 +63,7 @@ ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
 most: crt0.o libronin.a 
 
-all: crt0.o libronin.a libronin-noserial.a cleanish
+all: crt0.o libronin.a libronin-noserial.a cleanish libz.a
 
 libronin.a: $(OBJECTS) arm_sound_code.h Makefile
 	$(AR) rs $@ $(OBJECTS)
@@ -77,8 +77,11 @@ libronin-noserial.a: libronin.a
 	$(MAKE) CCFLAGS="$(CCFLAGS) -DNOSERIAL" CFLAGS="$(CCFLAGS) -DNOSERIAL" noserial-dummy
 	$(AR) rs $@ $(OBJECTS)
 
-compile_zlib:
+libz.a:
 	cd zlib; $(MAKE) libz.a
+	@echo Making convenience links.
+	-ln -s zlib/libz.a .
+	-ln -s zlib/zlib.h .
 
 cleanish:
 	rm -f $(OBJECTS) $(EXAMPLES) \
@@ -89,13 +92,13 @@ clean: cleanish
 	rm -f crt0.o
 	rm -f libronin.a 
 	rm -f libronin-noserial.a 
-
+	cd zlib && make clean
 
 examples: libronin.a $(EXAMPLES)
 
 ifeq "$(NETSERIAL)$(NETCD)" "00"
 DISTHEADERS=cdfs.h common.h dc_time.h gddrive.h gfxhelper.h gtext.h maple.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h
-dist: $(DISTHEADERS)
+dist: $(DISTHEADERS) 
 	@make clean && \
 	make all && \
 	if [ `ar -t libronin-noserial.a|grep net|wc -l` = 0 -a \
@@ -107,6 +110,9 @@ dist: $(DISTHEADERS)
 		cp $(DISTHEADERS) disttmp/ronin && \
 		cp README disttmp/ronin && \
 		cp COPYING disttmp/ronin && \
+		cp zlib/README disttmp/ronin/ZLIB_README && \
+		cp zlib/libz.a disttmp/ronin && \
+		cp zlib/zlib.h disttmp/ronin && \
 		(cd disttmp && tar cvf - ronin) | gzip -c > ronin-dist.tar.gz && \
 		echo "remember to tag and bump version if you didn't already." && \
 		rm -rf disttmp; \
