@@ -1,5 +1,5 @@
 #include "cdfs.h"
-//FIXME: A "gddrive.h" would not be a bad idea.
+#include "gddrive.h"
 
 #define ERR_SYSERR   -1
 #define ERR_DIRERR   -2
