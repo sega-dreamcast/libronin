@@ -20,7 +20,7 @@ else
 LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
 endif
 
-CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. #-DOLDMALLOC
+CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. -DDC
 
 CFLAGS = $(CCFLAGS)
 
@@ -158,3 +158,4 @@ notlibc.o: Makefile
 examples/ex_gtext.$(TYPE): libronin.a
 examples/ex_showpvr.$(TYPE): libronin.a
 examples/ex_cloud.$(TYPE): libronin.a
+examples/ex_malloc.elf: libronin.a

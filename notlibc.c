@@ -3,6 +3,8 @@
  * Rudimentary aproximations and stubs for various libc functions. 
  */
 
+#warning "Expect and ignore one warnings each for __isnan and time."
+
 //#include <unistd.h> /* (s)brk() definitions */
 //#include <stddef.h>   /* for size_t */
 //#include <stdlib.h>
@@ -75,7 +77,7 @@ void *sbrk( int incr )
   int newend_break = end_break + incr + 32-incr%32;
   
   if(newend_break > MEMEND) {
-    report("sbrk: Out of allocatable memory!\n");
+    reportf("sbrk: Out of allocatable memory! (incr = %d)\n", incr);
     return (void *)-1;
     /* Should set errno here if we are to be really compliant. */
   }
@@ -83,8 +85,8 @@ void *sbrk( int incr )
   total_size += incr;
   end_break = newend_break;
   
-  reportf("sbrk [%d %d %d -> %p]\r\n",
-          incr/1024,
+  reportf("sbrk [%dB alloc,\t%dk tot,\t%dk left -> %p]\r\n",
+          incr,
           total_size/1024,
           (MEMEND-end_break)/1024, 
           end_break);
