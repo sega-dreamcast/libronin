@@ -61,6 +61,7 @@ int _write ( int file, char *ptr, int len) {
   int n=len;
   if(file!=1 && file!=2) return -1;
   while(n-->0) serial_putc(*ptr++);
+  serial_flush();
   return len;
 }
 int _close (int file) { return close(file); }
