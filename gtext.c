@@ -116,6 +116,41 @@ struct font *load_font(char *fn)
   return r;
 }
 
+/*! @decl font *load_memfont( char *memfont )
+ *!
+ *! Loads a font already in memory and returns a pointer to the
+ *! resulting texture.
+ */
+struct font *load_memfont(char *s)
+{
+  struct font f;
+  struct font *r;
+  int i;
+
+  for(i=5; i<11; i++) {
+    f.tuvflags = (i-3)|((i-3)<<3);
+    f.tsize = 1<<i;
+    f.tscale = 1.0/f.tsize;
+    f.texture = ta_txalloc(1<<(2*i));
+    memset(f.texture, 0, 1<<(2*i));
+    if(convert_font(s, &f))
+      break;
+    else
+      ta_txfree(f.texture);
+  }
+  
+  if(i>=11) {
+    reportf( "FATAL: Font too large to fit in a texture\r\n");
+    //FIXME: Use system font to write error.
+    //FIXME: Implements atexit so that functions like goto_slave can be called.
+    exit(1);
+  }
+
+  r = (struct font *)malloc( sizeof(struct font) );
+  *r = f;
+  return r;
+}
+
 /*! @decl void draw_text(int x, int y, int w, unsigned char *text, 
  *!                      font *font, int color)
  *!
