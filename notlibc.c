@@ -38,7 +38,45 @@ static FILE _stderr;
 FILE *stderr = &_stderr;
 #endif
 int atexit(void (*function)(void)){ return 0; }
-void abort(){ report("aborted\n"); exit(1); }
+void abort()
+{
+    void *p;
+    int i;
+    unsigned long _stext = 0x8c010000;
+    extern char _etext[];
+
+    report("abort called.\n");
+    for(i=0; i<8; i++) {
+        switch(i) {
+	    case 0: p = __builtin_return_address(0); break;
+	    case 1: p = __builtin_return_address(1); break;
+	    case 2: p = __builtin_return_address(2); break;
+	    case 3: p = __builtin_return_address(3); break;
+	    case 4: p = __builtin_return_address(4); break;
+	    case 5: p = __builtin_return_address(5); break;
+	    case 6: p = __builtin_return_address(6); break;
+	    case 7: p = __builtin_return_address(7); break;
+        }
+        p -= 4;
+        if(p >= (void *)_stext && p < (void *)_etext)
+            printf("@ %p\n", p);
+        else
+            break;
+    }
+    printf("============\n");
+    int *sp = (int *)&p;
+    if( ((int)sp) & 3 )
+    {
+	printf("Invalid stack address!\n");
+	sp = (int *)((int)sp&~3);
+    }
+    for( i = 0; i<100; i++ )
+    {
+	printf( "%p: %08x\n", sp+i, sp[i] );
+    }
+    printf("============\n");
+    exit(1);
+}
 #ifdef DC_GLIBC
 int sprintf(char *str, const char *format, ...)
  {report("sprintf ignored\n");return 0;}
@@ -53,7 +91,7 @@ int __isnan(){} //Expect warning.
 void __assert_fail(char *message){report("__asser_fail ignored\n");}
 #endif
 void __main(){}
-void matherr( void *exp ){report("matherr ignored\n");}
+//void matherr( void *exp ){report("matherr ignored\n");}
 
 
 int _read (int file, char *ptr, int len) { return read(file, ptr, len); }
@@ -92,7 +130,7 @@ void exit(int rcode)
 {
   report("Exit called. Exiting to menu.\n");
   /* -3:Slave, -1:Reset, 0|1:Menu */
-  (*(void(**)())0x8c0000e0)(1);
+  (*(void(**)())0x8c0000e0)(-3);
   for(;;);
 }
 
@@ -115,6 +153,7 @@ static int end_break=MEMSTART;
 
 int brk( void *ebdds )
 {
+    reportf( "brk( %x )\n", ebdds );
   int new_break = (int)ebdds;
   if(new_break >= MEMSTART && new_break <= MEMEND) {
     end_break = new_break;
@@ -123,24 +162,63 @@ int brk( void *ebdds )
     return -1;
 }
 
+int stat(const char *path2, struct stat *buf)
+{
+    reportf("stat\n");
+    memset( (void *)buf, 0, sizeof( struct stat ) );
+    int fd = open( path2, O_RDONLY );
+    if( fd == -1 )
+    {
+	DIR *q = opendir(path2);
+	if( !q )
+	    return -1;
+	buf->st_mode  = 040555;
+	closedir(q);
+    }
+    else
+	buf->st_mode  = 000555;
+    buf->st_size = file_size( fd );
+    buf->st_blocks = (buf->st_size+1024) / 1024;
+    buf->st_blksize = 1024;
+    close( fd );
+    return 0;
+}
+
+int access( const char *fname, int mode )
+{
+    int fd = open( fname, O_RDONLY );
+    if( fd >= 0 )
+    {
+	close( fd );
+	return 0;
+    }
+    DIR *dp = opendir( fname );
+    if( dp )
+    {
+	closedir( dp );
+	return 0;
+    }
+    return -1;
+}
+
 void *sbrk( size_t incr )
 {
   int prior_break = end_break;
   int newend_break = prior_break + incr;
-  
+
   if(newend_break > MEMEND) {
-    reportf("sbrk: Out of allocatable memory! (incr = %d)\n", incr);
+/*     reportf("sbrk: Out of allocatable memory! (incr = %d)\n", incr); */
     return (void *)-1;
     /* Should set errno here if we are to be really compliant. */
   }
-  
+
   total_size += incr;
   end_break = newend_break;
-  
+
   reportf("sbrk [%dB alloc,\t%dk tot,\t%dk left -> %p]\r\n",
           incr,
           total_size/1024,
-          (MEMEND-end_break)/1024, 
+          (MEMEND-end_break)/1024,
           end_break);
 
   return (void *)(prior_break);
@@ -163,14 +241,14 @@ void *malloc(size_t size)
   keep=mallocpointer;
   mallocpointer += size;
 
-  reportf("malloc [%d %d %d -> %p]\r\n",
-          size/1024,
-          total_size/1024,
-          (MEMEND-mallocpointer)/1024, 
-          mallocpointer);
+/*   reportf("malloc [%d %d %d -> %p]\r\n", */
+/*           size/1024, */
+/*           total_size/1024, */
+/*           (MEMEND-mallocpointer)/1024,  */
+/*           mallocpointer); */
 
   if(mallocpointer > MEMEND) {
-    report("Out of allocatable memory!\n");
+/*     report("Out of allocatable memory!\n"); */
     return 0;
   }
 
