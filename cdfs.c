@@ -373,7 +373,7 @@ int close(int fd)
 
 int file_size( int fd ) /* hm */
 {
-  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD) return -1;
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD) return ERR_PARAM;
   return fh[fd-MIN_FD].len;
 }
 
@@ -382,6 +382,8 @@ int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset)
   int r, t;
   if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD)
     return ERR_PARAM;
+  if(fh[fd-MIN_FD].disc_gen != discchange_count)
+    return ERR_DISKCHG;
   if(offset>=fh[fd-MIN_FD].len)
     return 0;
   if(offset+nbyte > fh[fd-MIN_FD].len)
@@ -439,6 +441,8 @@ static int read_cached(int fd, void *buf, unsigned int nbyte)
   if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD || nbyte != 2048 ||
      (fh[fd-MIN_FD].loc & 2047))
     return ERR_PARAM;
+  else if(fh[fd-MIN_FD].disc_gen != discchange_count)
+    return ERR_DISKCHG;
   else if(fh[fd-MIN_FD].loc>=fh[fd-MIN_FD].len)
     return 0;
   else {
@@ -478,6 +482,8 @@ int asynch_read(int fd, void *buf, unsigned int nbyte)
      (fh[fd-MIN_FD].loc & 2047) || (nbyte & 2047))
     return ERR_PARAM;
   fd -= MIN_FD;
+  if(fh[fd].disc_gen != discchange_count)
+    return ERR_DISKCHG;
   if(fh[fd].loc + nbyte > ((fh[fd].len+2047)&~2047))
     return ERR_PARAM;
   if( fh[fd].async != -1 )
@@ -532,7 +538,7 @@ int closedir(DIR *dirp)
     free(dirp);
     return res;
   } else
-    return -1;
+    return ERR_PARAM;
 }
 
 int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **res)
