@@ -61,7 +61,7 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
-most: crt0.o libronin.a 
+most: crt0.o libronin.a libz.a
 
 all: crt0.o libronin.a libronin-noserial.a cleanish libz.a
 
