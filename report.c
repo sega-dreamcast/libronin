@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include "report.h"
 
-//Public function.
+//! Returns the int @[x] converted to a string.
 //FIXME: Move it to some string lib or something instead.
 char *itoa(int x) 
 { 
@@ -23,7 +23,10 @@ char *itoa(int x)
   return buf+ptr; 
 }
 
-//Public function
+//! Prints @[str] to the serial port and flushes it. Turned into an
+//! empty function if NOSERIAL is defined.
+//!
+//! Use this function for debug output.
 void report(const char *str)
 {
 #ifndef NOSERIAL
@@ -33,7 +36,10 @@ void report(const char *str)
 #endif
 }
 
-//Public function
+//! Outputs a string to the serial port based on the format string
+//! @[fmt]. Turned into an empty function if NOSERIAL is defined.
+//!
+//! Use this function for debug output.
 void reportf(const char *fmt, ...)
 {
 #ifndef NOSERIAL
