@@ -6,6 +6,10 @@
 #define RING_BUF ((short *)(void *)(RING_BASE_ADDR))
 #define SOUNDSTATUS ((volatile struct soundstatus *)(void *)(SOUNDSTATUS_ADDR))
 
+static struct message_buffer *messages
+  = ((struct message_buffer *)(MESSAGE_BASE_ADDR));
+
+#ifdef MPEG_AUDIO
 #include <mad.h>
 
 static struct mad_stream _stream;
@@ -18,13 +22,17 @@ static struct mad_synth _synth;
 
 static int current_mp ;
 
-/* static struct mpeg_buffer *mp; */
-
 #define MPEG_BUFFER(N) ((struct mpeg_buffer *)(MPEG_BASE_ADDR+sizeof(struct mpeg_buffer)*(N)))
 #define MIN(A,B) ((A)<(B)?(A):(B))
+#endif
 
-static struct message_buffer *messages
-  = ((struct message_buffer *)(MESSAGE_BASE_ADDR));
+#define IDLE 0
+#define OUTPUT 1
+#define MOVE 2
+#define READ 3
+#define DECODE 4
+#define SYNTH 5
+
 
 static char *itoa(int x) 
 { 
@@ -137,6 +145,7 @@ void reportf(const char *fmt, ...)
   va_end(va);
 }
 
+#ifdef MPEG_AUDIO
 #define NEXT_MP() do{\
 	mp->size = mpbp = 0;						\
 	current_mp++;							\
@@ -163,17 +172,16 @@ static int get_mpeg_bytes( unsigned char *d, int n )
 }
 
 
-  signed short scale(mad_fixed_t sample)
-  {
-    if (sample >= MAD_F_ONE)  return 32767;
-    if (sample <= -MAD_F_ONE) return -32768;
-    return sample >> (MAD_F_FRACBITS + 1 - 16);
-  };
+static signed short scale(mad_fixed_t sample)
+{
+  if (sample >= MAD_F_ONE)  return 32767;
+  if (sample <= -MAD_F_ONE) return -32768;
+  return sample >> (MAD_F_FRACBITS + 1 - 16);
+};
 static inline void output_sample_s( signed short l,
 				    signed short r,
 				    int offset )
 {
-  
   static int writepos  = 0;
   int dist;
   do
@@ -181,7 +189,9 @@ static inline void output_sample_s( signed short l,
     dist = *AICA(0x2814)-writepos;
     if( dist < 0 )
       dist += SOUNDSTATUS->ring_length;
+    SOUNDSTATUS->message = IDLE;
   }  while( dist < 10 );
+  SOUNDSTATUS->message = OUTPUT;
 
   ((signed short *)RING_BUF)[ writepos  ] = l;
   ((signed short *)RING_BUF)[ writepos + offset ] = r;
@@ -200,13 +210,9 @@ static void libmad_output_pcm( )
   nsamples  = pcm->length;
   left_ch   = pcm->samples[0];
   right_ch  = pcm->samples[1];
-  SOUNDSTATUS->message =
-    (header->layer<<24)|
-    ((header->bitrate/1000)<<8) | 2;
   while( nsamples-- )
   {
     signed int sample = scale( *left_ch );
-    SOUNDSTATUS->message = sample<<8;
     output_sample_s( sample,
 		     (nchannels<2?sample:scale( *right_ch++ )),
 		     STEREO_OFFSET);
@@ -275,7 +281,8 @@ char *mad_error( int n )
       return "Unkown error";
   }
 }
-#define BSIZE 8192
+
+#define BSIZE 1080
 static void play_mpeg()
 {
   int amnt = 0, err;
@@ -292,35 +299,39 @@ static void play_mpeg()
     first_frame = 0;
   }
 
+  SOUNDSTATUS->message = MOVE;
   if( _stream.next_frame )
     memmove(input.data, _stream.next_frame,
 	    input.length =
 	    (&input.data[input.length])-_stream.next_frame);
 
+  SOUNDSTATUS->message = READ;
   if( BSIZE - input.length )
   {
-/*     reportf( "read %d %x\n", BSIZE - input.length, ((int *)input.data)[0] ); */
-    amnt = get_mpeg_bytes(input.data + input.length,
-			  BSIZE - input.length);
+    amnt = get_mpeg_bytes(input.data + input.length, BSIZE - input.length);
+    input.length = BSIZE;
   }
+
   SOUNDSTATUS->samplepos++;
-  mad_stream_buffer(stream, input.data, input.length += amnt);
+  mad_stream_buffer(stream, input.data, BSIZE);
+
+  SOUNDSTATUS->message = DECODE;
   if( mad_frame_decode(frame, stream) )
   {
     if( _stream.error == 0x0101 )
-    {
-    }
+      ;
     else
       reportf( "mad_frame_decode[%d]:  %s\n",
 	       SOUNDSTATUS->samplepos, mad_error( _stream.error ) );
   }
   else
   {
-    report( "Actually found a frame!\n"); 
+    SOUNDSTATUS->message = SYNTH;
     mad_synth_frame(synth, frame);
     libmad_output_pcm(  ); /* write to device */
   }
 }
+#endif
 
 void __gccmain() { }
 
@@ -412,12 +423,14 @@ static void do_command(int cmd)
      if( SOUNDSTATUS->stereo )
        *AICA(0x80) |= 0xc000;
      *(unsigned char *)AICA(0x280d) = 0;
+#ifdef MPEG_AUDIO
      if( cmd == CMD_SET_MODE(MODE_MPEG) )
      {
        SOUNDSTATUS->mode = MODE_MPEG;
        init_mpeg();
      }
      else
+#endif
        SOUNDSTATUS->mode = MODE_PLAY;
      break;
   }
@@ -445,7 +458,9 @@ int main()
 
     if(SOUNDSTATUS->mode == MODE_PLAY)
       SOUNDSTATUS->samplepos = *AICA(0x2814);
+#ifdef MPEG_AUDIO
     else if( SOUNDSTATUS->mode == MODE_MPEG )
       play_mpeg();
+#endif
   }
 }

@@ -29,7 +29,7 @@ OBJECTS += notlibc.o
 EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_video.$(TYPE)
 
-ARMFLAGS=-mcpu=arm7 -ffreestanding -O2 
+ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
 all: libronin.a crt0.o
 
@@ -58,7 +58,9 @@ arm_sound_code.elf: arm_startup.o arm_sound_code.o
 	arm-elf-gcc $(ARMFLAGS) -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -Llibmad -lmad -lgcc
 
 arm_sound_code.o: arm_sound_code.c soundcommon.h
-	arm-elf-gcc -c -I libmad -Wall $(ARMFLAGS) -Wundefined  -DMPEGMUSIC -o $@ $<
+	arm-elf-gcc -c -I libmad -Wall $(ARMFLAGS) -Wundefined   -o $@ $<
+
+# -DMPEG_AUDIO
 
 arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
