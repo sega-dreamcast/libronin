@@ -91,7 +91,7 @@ EXTERN_C int close(int fd)
 EXTERN_C int read(int fd, void *buf, unsigned int len)
 {
   struct { int fd, pos, len; } cmd;
-  int res;
+  int res, tot=0;
   /* printf("read(%d,%p,%d)\n", fd, buf, len); */
   if(fd<0 || fd>MAXFD)
     return -1;
@@ -101,6 +101,7 @@ EXTERN_C int read(int fd, void *buf, unsigned int len)
       return res;
     buf = ((char *)buf)+res;
     len -= res;
+    tot += res;
   }
   cmd.fd = fd;
   cmd.pos = readpos[fd];
@@ -111,13 +112,13 @@ EXTERN_C int read(int fd, void *buf, unsigned int len)
     readpos[fd] += res;
     memcpy(buf, replybuf, res);
   }
-  return res;
+  return (res>=0? res+tot : res);
 }
 
 EXTERN_C int pread(int fd, void *buf, unsigned int len, unsigned int offset)
 {
   struct { int fd, pos, len; } cmd;
-  int res;
+  int res, tot=0;
   /* printf("pread(%d,%p,%d,%d)\n", fd, buf, len, offset); */
   if(fd<0 || fd>MAXFD)
     return -1;
@@ -128,6 +129,7 @@ EXTERN_C int pread(int fd, void *buf, unsigned int len, unsigned int offset)
     buf = ((char *)buf)+res;
     len -= res;
     offset += res;
+    tot += res;
   }
   cmd.fd = fd;
   cmd.pos = offset;
@@ -136,7 +138,7 @@ EXTERN_C int pread(int fd, void *buf, unsigned int len, unsigned int offset)
   /* printf("res = %d\n", res); */
   if(res > 0)
     memcpy(buf, replybuf, res);
-  return res;
+  return (res>=0? res+tot : res);
 }
 
 EXTERN_C long lseek(int fd, long pos, int whence)
