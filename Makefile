@@ -10,19 +10,23 @@ OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -
 CPUFLAGS = -ml  -m4-single-only -mhitachi
 INCLUDES = -I.
 
+# TYPE can be elf, srec or bin
+TYPE = bin
 EXTRALIBS += -lm
 CRT0=crt0.o
+ifeq "$(TYPE)" "bin"
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(CRT0) $(INCLUDES) -o $@ -L. -lronin-noserial -lgcc -lc
+else
 LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(CRT0) $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
+endif
+
+CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I.
+
+CFLAGS = $(CCFLAGS)
 
 
-CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. 
-#-DNOSERIAL
-
-CFLAGS=$(CCFLAGS)
-
-
-# TYPE can be elf or srec
-TYPE     = elf
+# TYPE can be elf, srec or bin
+TYPE     = bin
 OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o 
 
 OBJECTS += notlibc.o 
@@ -33,15 +37,29 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
-all: libronin.a crt0.o
+most: crt0.o libronin.a 
+
+all: crt0.o libronin.a libronin-noserial.a cleanish
 
 libronin.a: $(OBJECTS) arm_sound_code.h Makefile
 	$(AR) rs $@ $(OBJECTS)
 
-clean:
-	rm -f $(OBJECTS) libronin.a $(EXAMPLES) arm_sound_code.h \
-	      arm_sound_code.bin arm_sound_code.elf arm_sound_code.o \
-	      arm_startup.o
+noserial-dummy: $(OBJECTS) arm_sound_code.h Makefile
+	@echo Dummy done.
+
+libronin-noserial.a: libronin.a
+	$(MAKE) cleanish
+	rm -f libronin-serial.a
+	$(MAKE) CCFLAGS="$(CCFLAGS) -DNOSERIAL" CFLAGS="$(CCFLAGS) -DNOSERIAL" noserial-dummy
+	$(AR) rs $@ $(OBJECTS)
+
+cleanish:
+	rm -f $(OBJECTS) crt0.o $(EXAMPLES) \
+	      arm_sound_code.h arm_sound_code.bin arm_sound_code.elf \
+	      arm_sound_code.o arm_startup.o
+
+clean: cleanish
+	rm -f libronin.a 
 
 
 examples: libronin.a $(EXAMPLES)
@@ -78,13 +96,16 @@ stella.elf: examples/ex_serial.c examples/ex_serial.o libronin.a serial.h Makefi
 
 
 #Automatic extension conversion.
-.SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec
+.SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec .bin
 
 .c.elf: libronin.a crt0.o Makefile
 	$(CC) -Wl,-Ttext=0x8c020000 $(CCFLAGS) $*.c $(LINK)
 
+.c.bin: libronin-noserial.a crt0.o Makefile
+	$(CC) -Wl,-Ttext=0x8c010000,--oformat,binary -DNOSERIAL $(CCFLAGS) $*.c $(LINK)
+
 .c.srec: libronin.a crt0.o Makefile
-	$(CC) -Wl,-Ttext=0x8c020000,--oformat,srec $(CCFLAGS) $*.c  $(LINK)
+	$(CC) -Wl,-Ttext=0x8c020000,--oformat,srec $(CCFLAGS) $*.c $(LINK)
 
 .cpp.o:
 #	@echo Compiling $*.cpp
