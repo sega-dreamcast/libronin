@@ -38,7 +38,7 @@ struct soundstatus {
 
 
 /* This gives 11025 Hz */
-#define FREQ_EXP      (-1)
+#define FREQ_EXP      (-2)
 #define FREQ_MANTISSA (0)
 
 #define FREQ ((44100*(1024+FREQ_MANTISSA))>>(10-FREQ_EXP))
