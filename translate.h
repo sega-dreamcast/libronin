@@ -1,3 +1,8 @@
+#ifndef _TRANSLATE_H
+#define _TRANSLATE_H been_here_before
+
+#include "common.h"
+
 START_EXTERN_C
 char *language_name( int id );
 int set_language( int language );
@@ -12,3 +17,5 @@ END_EXTERN_C
 
 
 #define _(X)   ___translate( X, current_language )
+
+#endif /* _TRANSLATE_H */
