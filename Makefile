@@ -32,11 +32,14 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 
 all: libronin.a crt0.o
 
-libronin.a: $(OBJECTS) Makefile
+libronin.a: $(OBJECTS) arm_sound_code.h Makefile
 	$(AR) rcs $@ $(OBJECTS)
 
 clean:
-	rm -f *.o $(OBJECTS) libronin.a $(EXAMPLES)
+	rm -f $(OBJECTS) libronin.a $(EXAMPLES) arm_sound_code.h \
+	      arm_sound_code.bin arm_sound_code.elf arm_sound_code.o \
+	      arm_startup.o
+
 
 examples: $(EXAMPLES)
 
@@ -44,23 +47,24 @@ examples: $(EXAMPLES)
 
 
 #ARM sound code
-dc/arm_sound_code.h : dc/arm_sound_code.bin
-	dc/encode_armcode.pike < $< > $@
+arm_sound_code.h: arm_sound_code.bin
+	./encode_armcode.pike < $< > $@
 
-dc/arm_sound_code.bin : dc/arm_sound_code.elf
+arm_sound_code.bin: arm_sound_code.elf
 	arm-elf-objcopy -O binary $< $@
 
-dc/arm_sound_code.elf : dc/arm_startup.o dc/arm_sound_code.o
+arm_sound_code.elf: arm_startup.o arm_sound_code.o
 	arm-elf-gcc -mcpu=arm7 -ffreestanding -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc
 
-dc/arm_sound_code.o : dc/arm_sound_code.c dc/soundcommon.h
+arm_sound_code.o: arm_sound_code.c soundcommon.h
 	arm-elf-gcc -c -mcpu=arm7 -ffreestanding -O4 -fomit-frame-pointer -o $@ $<
 
-dc/arm_startup.o : dc/arm_startup.s
+arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
 
 
 
+#Automatic extension conversion.
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec
 
 .c.elf: libronin.a crt0.o Makefile
@@ -95,3 +99,6 @@ dc/arm_startup.o : dc/arm_startup.s
 #	@echo Compiling $*.s
 	$(AS) $*.s -o $@
 
+
+#Extra dependencies.
+sound.o: arm_sound_code.h
