@@ -10,26 +10,34 @@ struct soundstatus {
   int cmd;
   int cmdstatus;
   int samplepos;
-#ifdef STEREO
   int stereo;
-#endif
   int freq;
   int ring_length;
+  int message;
 };
 
 struct mpeg_buffer
 {
   int size;
-  char buffer[2048];
+  unsigned char buffer[2048];
 };
 #define NUM_MPEG_BUFFERS 128
 
+struct message_buffer
+{
+  int size;
+  int lock;
+  unsigned char buffer[1024];
+};
 
-#define SOUNDSTATUS_ADDR (0xff80)
+#define STACK_BASE_ADDR    0x7fff0
+#define SOUNDSTATUS_ADDR   (STACK_BASE_ADDR+4)
+#define HEAP_BASE_ADDR     (0x80000+48)
+#define MPEG_BASE_ADDR     (0x100000)
+#define MESSAGE_BASE_ADDR  (0x180000-sizeof(struct message_buffer))
+#define RING_BASE_ADDR     (0x180000)
 
-#define RING_BASE_ADDR (0x180000)
-#define MPEG_BASE_ADDR (0x100000)
-#define MPEG_BUFF(X) ((volatile struct mpeg_buffer *)(void *)(MPEG_BASE_ADDR+(sizeof(struct mpeg_buffer)*(X))))
+
 
 #define MODE_PAUSE 0
 #define MODE_PLAY  1
@@ -44,13 +52,10 @@ struct mpeg_buffer
 #define CMD_SET_FREQ(n) (0x50|(n))
 #define CMD_SET_BUFFER(n) (0x60|(n))
 
-
 /* This gives 11025 Hz */
 #define FREQ_EXP      (-1)
 #define FREQ_MANTISSA (0)
-
 #define FREQ ((44100*(1024+FREQ_MANTISSA))>>(10-FREQ_EXP))
-
 
 /* 44100 Hz */
 #define FREQ1_EXP (0)
@@ -70,14 +75,14 @@ struct mpeg_buffer
 /* 16bit */
 #define SAMPLE_MODE 0
 
-#if SAMPLE_MODE == 0
+/* #if SAMPLE_MODE == 0 */
 #define SAMPLES_TO_BYTES(n) ((n)<<1)
-#else
-#if SAMPLE_MODE == 1
-#define SAMPLES_TO_BYTES(n) (n)
-#else
-#define SAMPLES_TO_BYTES(n) ((n)>>1)
-#endif
-#endif
+/* #else */
+/* #if SAMPLE_MODE == 1 */
+/* #define SAMPLES_TO_BYTES(n) (n) */
+/* #else */
+/* #define SAMPLES_TO_BYTES(n) ((n)>>1) */
+/* #endif */
+/* #endif */
 
 #define STEREO_OFFSET (RING_BUFFER_SAMPLES+256)

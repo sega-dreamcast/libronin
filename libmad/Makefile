@@ -1,10 +1,10 @@
 CC =  arm-elf-gcc -Wall 
 aS =  arm-elf-as
 DEFINES= -DHAVE_CONFIG_H -I.. -I../.. -DASO_INTERLEAVE1 -DASO_IMDCT -DFPM_ARM
-OPTIMIZE=-O5 -Wall -ffast-math -Wundefined
 
-# -Os -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-rtti -fno-defer-pop -fforce-addr -fstrict-aliasing -fallow-single-precision -funroll-loops -fdelete-null-pointer-checks -fno-exceptions -fconserve-space
-CFLAGS =  ${DEFINES} ${OPTIMIZE}
+ARMFLAGS=-march=armv4m -ffreestanding -O2 -fomit-frame-pointer -ffast-math 
+
+CFLAGS =  ${DEFINES} -Wall  ${ARMFLAGS}
 
 
 OBJ=fixed.o frame.o huffman.o layer12.o layer3.o stream.o synth.o  \

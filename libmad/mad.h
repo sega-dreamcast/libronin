@@ -806,5 +806,6 @@ int mad_decoder_finish(struct mad_decoder *);
 int mad_decoder_run(struct mad_decoder *, enum mad_decoder_mode);
 int mad_decoder_message(struct mad_decoder *, void *, unsigned int *);
 
+extern void reportf(const char *fmt, ...);
 # endif
 

@@ -1,12 +1,13 @@
+extern void reportf(const char *fmt, ...);
 
-void memmove( void *s, void *d, int n )
+void memmove( void *d, void *s, int n )
 {
   char *_d = (char *)d;
   char *_s = (char *)s;
   while( n-- ) *(_d++) = *(_s++);
 }
 
-void *memcpy( void *s, void *d, int n )
+void *memcpy( void *d, void *s, int n )
 {
   char *_d = (char *)d;
   char *_s = (char *)s;
@@ -14,13 +15,8 @@ void *memcpy( void *s, void *d, int n )
   return d;
 }
 
-
-/* void memset( void *p, char d, int n ) */
-/* { */
-/*   while(n--) *p++=d; */
-/* } */
-
-char *membase = (char *)(512 * 1024);
+#if 1
+static char *membase = (char *)(512 * 1024 + 64);
 /* room for a 256 Kbyte binary and a 256 KByte stack.
  *   <mem top>
  *     [ sample buffer l ]   64K   
@@ -34,12 +30,14 @@ char *membase = (char *)(512 * 1024);
 void *malloc( int n )
 {
   membase += n;
+  reportf( "ARM: malloc %d\n", n );
   return (void *)(membase-n);
 }
 
 int free( void *n )
 {
   /* not really */
+  reportf( "ARM: free %p\n", n );
   return 0;
 }
 
@@ -49,7 +47,7 @@ void *calloc( int n, int m )
   memset( (r = malloc( n*m)), 0, n*m );
   return r;
 }
-
+#endif
 
 void *memset( void *d, char b, int n )
 {

@@ -18,13 +18,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: config.h,v 1.1 2001-04-27 23:17:41 per Exp $
+ * $Id: config.h,v 1.2 2001-05-05 22:15:17 per Exp $
  */
 
 
 
 # ifndef MAD_CONFIG_H
 # define MAD_CONFIG_H
+extern void reportf(const char *fmt, ...);
+void reporthex( int d, int n );
+void report(const char *str);
 
 
 /*****************************************************************************

@@ -21,7 +21,6 @@ void *memcpy4(void *s1, const void *s2, unsigned int n)
   return s1;
 }
 
-#ifdef STEREO
 void *memcpy4s(void *s1, const void *s2, unsigned int n)
 {
   unsigned int *p1a = s1;
@@ -41,7 +40,6 @@ void *memcpy4s(void *s1, const void *s2, unsigned int n)
   }
   return s1;
 }
-#endif
 
 void *memset4(void *s, int c, unsigned int n)
 {
@@ -120,14 +118,32 @@ void do_sound_command(int cmd)
   wait_sound_command(0);
 }
 
+
+void ronin_process_sound_messages()
+{
+  int sz;
+  struct message_buffer *mp =
+    (struct message_buffer *)(0xa0800000 + MESSAGE_BASE_ADDR);
+
+  while( read_sound_int( &mp->lock ) ) ;
+  write_sound_int( &mp->lock, 2 );
+
+  if( sz = read_sound_int( &mp->size ) )
+  {
+    char *bp = mp->buffer;
+    int z = sz;
+    while( z-- ) serial_putc( *(bp++) );
+    write_sound_int( &mp->size, 0 );
+  }
+  write_sound_int( &mp->lock, 0 );
+}
+
 void start_sound()
 {
   while(read_sound_int(&SOUNDSTATUS->mode) != MODE_PLAY) {
     memset4((void*)RING_BUF, 0, SAMPLES_TO_BYTES(RING_BUFFER_SAMPLES+1));
-#ifdef STEREO
     memset4((void*)(RING_BUF+STEREO_OFFSET), 0,
 	    SAMPLES_TO_BYTES(RING_BUFFER_SAMPLES+1));
-#endif
     fillpos = 0;
     do_sound_command(CMD_SET_MODE(MODE_PLAY));
   }

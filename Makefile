@@ -15,7 +15,9 @@ CRT0=crt0.o
 LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(CRT0) $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
 
 
-CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. -DNOSERIAL
+CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. 
+
+# -DNOSERIAL
 
 CFLAGS=$(CCFLAGS)
 
@@ -26,6 +28,8 @@ OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_video.$(TYPE)
+
+ARMFLAGS=-march=armv4m -ffreestanding -O2
 
 all: libronin.a crt0.o
 
@@ -51,10 +55,10 @@ arm_sound_code.bin: arm_sound_code.elf
 	arm-elf-objcopy -O binary $< $@
 
 arm_sound_code.elf: arm_startup.o arm_sound_code.o
-	arm-elf-gcc -mcpu=arm7 -ffreestanding -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -Llibmad -lmad -lgcc
+	arm-elf-gcc $(ARMFLAGS) -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -Llibmad -lmad -lgcc
 
 arm_sound_code.o: arm_sound_code.c soundcommon.h
-	arm-elf-gcc -c -I libmad -ffast-math -DMPEGMUSIC -mcpu=arm7 -ffreestanding -O4 -fomit-frame-pointer -o $@ $<
+	arm-elf-gcc -c -I libmad -Wall $(ARMFLAGS) -Wundefined  -DMPEGMUSIC -o $@ $<
 
 arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
