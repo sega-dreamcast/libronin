@@ -4,8 +4,8 @@
 #include "notlibc.h"
 #include "video.h"
 #include "ta.h"
-#include "misc.h"
 #include "gtext.h"
+#include "misc.h"
 #include "matrix.h"
 
 
@@ -36,10 +36,46 @@ void init_palette()
   }
 }
 
+static int convert_newfont(char *src, struct font *dst)
+{
+  int i, xx, yy, x=0, y=0, lh=0;
+  src += 2;
+  memcpy(dst->cx, src, 5*256);
+  src += 5*256;
+  for(i=0; i<256; i++) {
+    int cw = dst->cw[i], ch = dst->ch[i];
+    if(x+cw > dst->tsize) {
+      x = 0;
+      y += lh+1;
+      lh = 0;
+    }
+    if(ch>lh)
+      lh = ch;
+    if(y+lh > dst->tsize)
+      return 0;
+    dst->x[i] = x;
+    dst->y[i] = y;
+    for(yy=0; yy<ch; yy++)
+      for(xx=0; xx<cw; xx++) {
+	char v = *src++;
+	char *p = ((char*)dst->texture)+
+	  ((twiddletab[x+xx]<<1)|twiddletab[y+yy]);
+	if(((unsigned int)p)&1)
+	  *(short *)(p-1) |= v<<8;
+	else
+	  *(short *)p |= (unsigned char)v;
+      }
+    x += cw+1;
+  }
+  return 1;  
+}
+
 static int convert_font(char *src, struct font *dst)
 {
   short *index = (short *)src;
   int i, xx, yy, x=0, y=0, fontw = index[0];
+  if(fontw<0)
+    return convert_newfont(src, dst);
   src += 512;
   for(i=0; i<256; i++) {
     int cp = (i==0? 0 : index[i]);
@@ -52,7 +88,11 @@ static int convert_font(char *src, struct font *dst)
     }
     dst->x[i] = x;
     dst->y[i] = y;
-    dst->w[i] = cw;
+    dst->cx[i] = 0;
+    dst->cy[i] = 0;
+    dst->cw[i] = cw;
+    dst->ch[i] = 24;
+    dst->adv[i] = cw + (i==' '? 5:2);
     for(xx=0; xx<cw; xx++)
       for(yy=0; yy<24; yy++) {
 	char v = src[yy*fontw+cp+xx];
@@ -182,34 +222,35 @@ void draw_text(int x, int y, int w, unsigned char *text, struct font *font, int 
   myvertex.ocolour = 0;
 
   while((c=*text++)) {
-    int u = font->x[c], v = font->y[c], cw = font->w[c];
+    int u = font->x[c], v = font->y[c], adv = font->adv[c];
+    int cx = font->cx[c], cy = font->cy[c], cw = font->cw[c], ch = font->ch[c];
 
     /* plot character */
     if(cw)
     {
-      if(cw > w)
-	cw = w;
+      if(cx+cw > w)
+	if((cw = w-cx)<0)
+	  cw = 0;
 
       myvertex.cmd = TA_CMD_VERTEX;
       myvertex.u = u*scale;
       myvertex.v = v*scale;
-      ta_commit_vertex(&myvertex, x, y, 0.0);
+      ta_commit_vertex(&myvertex, x+cx, y+cy, 0.0);
 
       myvertex.u = (u+cw)*scale;
-      ta_commit_vertex(&myvertex, x+cw, y, 0.0);
+      ta_commit_vertex(&myvertex, x+cx+cw, y+cy, 0.0);
 
       myvertex.u = u*scale;
-      myvertex.v = (v+24)*scale;
-      ta_commit_vertex(&myvertex, x, y+24, 0.0);
+      myvertex.v = (v+ch)*scale;
+      ta_commit_vertex(&myvertex, x+cx, y+cy+ch, 0.0);
 
       myvertex.u = (u+cw)*scale;
       myvertex.cmd |= TA_CMD_VERTEX_EOS;
-      ta_commit_vertex(&myvertex, x+cw, y+24, 0.0);  
+      ta_commit_vertex(&myvertex, x+cx+cw, y+cy+ch, 0.0);  
     }
 
-    cw += (c==' '? 5:2);
-    x += cw;
-    if((w -= cw)<=0)
+    x += adv;
+    if((w -= adv)<=0)
       break;
   }
 #else
@@ -271,6 +312,19 @@ void draw_text(int x, int y, int w, unsigned char *text, struct font *font, int 
   }
 #endif
 }
+
+/*! @decl int text_width(unsigned char *text, font *font)
+ *!
+ *! Calculate pixel width of @[text] using @[font].
+ */
+int text_width(unsigned char *text, struct font *font)
+{
+  int c, x=0;
+  while((c=*text++))
+    x += font->adv[c];
+  return x;
+}
+
 
 void display_font(struct font *font)
 {
