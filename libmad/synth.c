@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: synth.c,v 1.1 2001-04-27 23:17:44 per Exp $
+ * $Id: synth.c,v 1.2 2001-05-06 00:10:37 peter Exp $
  */
 
 # ifdef HAVE_CONFIG_H
@@ -151,7 +151,7 @@ static
 void dct32(mad_fixed_t const in[32], unsigned int slot,
 	   mad_fixed_t lo[16][8], mad_fixed_t hi[16][8])
 {
-#if 1
+#if 0
   static mad_fixed_t work_area[176];
 # define t0 work_area[0]
 # define t1 work_area[1]

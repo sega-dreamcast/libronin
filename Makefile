@@ -29,7 +29,7 @@ OBJECTS += notlibc.o
 EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_video.$(TYPE)
 
-ARMFLAGS=-march=armv4m -ffreestanding -O2
+ARMFLAGS=-mcpu=arm7 -ffreestanding -O2 
 
 all: libronin.a crt0.o
 
@@ -63,6 +63,9 @@ arm_sound_code.o: arm_sound_code.c soundcommon.h
 arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
 
+#Serial code that hangs
+stella.elf: examples/ex_serial.c examples/ex_serial.o libronin.a serial.h Makefile
+	$(CCC) -Wl,-Ttext=0x8c020000 examples/ex_serial.o $(LINK)
 
 
 #Automatic extension conversion.
@@ -78,7 +81,7 @@ arm_startup.o: arm_startup.s
 #	@echo Compiling $*.cpp
 	$(CCC) $(INCLUDES) -c $(CCFLAGS) $*.cpp -o $@
 
-.c.o:
+.c.o: Makefile
 #	@echo Compiling $*.c
 	$(CC)  $(INCLUDES) -c $(CCFLAGS) $*.c -o $@
 

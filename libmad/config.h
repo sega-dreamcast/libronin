@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: config.h,v 1.2 2001-05-05 22:15:17 per Exp $
+ * $Id: config.h,v 1.3 2001-05-06 00:10:37 peter Exp $
  */
 
 
@@ -70,7 +70,7 @@ void report(const char *str);
 
 /* Define to enable diagnostic debugging support. */
 /* #undef DEBUG */
-
+#include "armlib.h"
 /* Define to disable debugging assertions. */
 #define NDEBUG
 

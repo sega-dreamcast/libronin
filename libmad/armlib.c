@@ -1,3 +1,4 @@
+#include "config.h"
 extern void reportf(const char *fmt, ...);
 
 void memmove( void *d, void *s, int n )

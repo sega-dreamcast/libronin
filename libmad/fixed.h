@@ -16,9 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: fixed.h,v 1.1 2001-04-27 23:17:41 per Exp $
+ * $Id: fixed.h,v 1.2 2001-05-06 00:10:37 peter Exp $
  */
-# define FPM_ARM 1
+/* # define FPM_ARM 1 */
+#define FPM_DEFAULT
 
 # ifndef MAD_FIXED_H
 # define MAD_FIXED_H

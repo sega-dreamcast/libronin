@@ -1,14 +1,18 @@
 CC =  arm-elf-gcc -Wall 
 aS =  arm-elf-as
-DEFINES= -DHAVE_CONFIG_H -I.. -I../.. -DASO_INTERLEAVE1 -DASO_IMDCT -DFPM_ARM
+DEFINES= -DHAVE_CONFIG_H -I.. -I../.. 
+#  -DFPM_DEFAULT
+# -DASO_INTERLEAVE1 -DASO_IMDCT -DFPM_ARM
 
-ARMFLAGS=-march=armv4m -ffreestanding -O2 -fomit-frame-pointer -ffast-math 
+ARMFLAGS=-mcpu=arm7 -ffreestanding -O2 -fomit-frame-pointer -ffast-math 
 
 CFLAGS =  ${DEFINES} -Wall  ${ARMFLAGS}
 
 
 OBJ=fixed.o frame.o huffman.o layer12.o layer3.o stream.o synth.o  \
-    timer.o version.o bit.o armlib.o imdct_l_arm.o
+    timer.o version.o bit.o armlib.o 
+
+# imdct_l_arm.o
 
 all: libmad.a
 

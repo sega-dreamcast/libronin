@@ -18,7 +18,7 @@ static struct mad_synth _synth;
 
 static int current_mp ;
 
-static struct mpeg_buffer *mp;
+/* static struct mpeg_buffer *mp; */
 
 #define MPEG_BUFFER(N) ((struct mpeg_buffer *)(MPEG_BASE_ADDR+sizeof(struct mpeg_buffer)*(N)))
 #define MIN(A,B) ((A)<(B)?(A):(B))
@@ -91,7 +91,7 @@ void reporthex( int d, int n )
 
 void reportf(const char *fmt, ...)
 {
-  int p, e;
+  int p/*, e*/;
   int ee = report_begin();
   va_list va;
   va_start(va, fmt);
@@ -163,16 +163,16 @@ static int get_mpeg_bytes( unsigned char *d, int n )
 }
 
 
-static inline void output_sample_s( signed short l,
-				    signed short r,
-				    int offset )
-{
   signed short scale(mad_fixed_t sample)
   {
     if (sample >= MAD_F_ONE)  return 32767;
     if (sample <= -MAD_F_ONE) return -32768;
     return sample >> (MAD_F_FRACBITS + 1 - 16);
   };
+static inline void output_sample_s( signed short l,
+				    signed short r,
+				    int offset )
+{
   
   static int writepos  = 0;
   int dist;
@@ -322,7 +322,7 @@ static void play_mpeg()
   }
 }
 
-static void __gccmain() { }
+void __gccmain() { }
 
 static int freq_exp = 0;
 static int freq_mantissa = 0;
