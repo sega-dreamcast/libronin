@@ -183,6 +183,7 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
     words_per_line=(640/4)<<shift;
   modulo=1;
 
+  fb_devconfig.dc_lace = 0;
 
   if(!(cabletype&2))	// VGA => No interlace
   {
@@ -195,8 +196,10 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
       modulo+=words_per_line;	//Skip the black part (lores) or
                                 //add one line to offset => display
 				//every other line (hires)
-    if(res==2)
+    if(res==2) {
       videoflags|=1<<4; //enable LACE 
+      fb_devconfig.dc_lace = 1;
+    }
     
 #if 0
     if(!pal)
@@ -232,6 +235,9 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
 
   if(res<2 && (cabletype&2))
     laceoffset=-1;
+
+  fb_devconfig.dc_vidx = hpos;
+  fb_devconfig.dc_vidy = voffset;
 
   vpos=(voffset<<16)|(voffset+laceoffset);
     

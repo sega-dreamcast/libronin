@@ -65,6 +65,9 @@ struct _fb_devconfig{
   int	dc_voffset;		/* Vertical display offset */
   int   dc_fullscreen;          /* Render content streched to full screen */
   int   dc_hz50;                /* Refresh rate */
+  int   dc_vidx;		/* Screen start X */
+  int   dc_vidy;		/* Screen start Y */
+  int   dc_lace;		/* Interlace 1/0 */
 
   //	struct rasops_info rinfo;
 };

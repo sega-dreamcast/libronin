@@ -225,7 +225,7 @@ static struct mapledev *check_pads()
   }
   if(gun_mode>=0 && gun_mode<4 && (dev[gun_mode].xfunc & MAPLE_FUNC_LIGHTGUN)){
     link = buf;
-    *(volatile unsigned int *)0xa05f80c4 = ~0;
+    /*    *(volatile unsigned int *)0xa05f80c4 = ~0; */
     *buf++ = (gun_mode << 16)|0x200;
     *buf++ = 0;
     *buf++ = 0;
