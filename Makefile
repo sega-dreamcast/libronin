@@ -77,6 +77,9 @@ libronin-noserial.a: libronin.a
 	$(MAKE) CCFLAGS="$(CCFLAGS) -DNOSERIAL" CFLAGS="$(CCFLAGS) -DNOSERIAL" noserial-dummy
 	$(AR) rs $@ $(OBJECTS)
 
+compile_zlib:
+	cd zlib; $(MAKE) libz.a
+
 cleanish:
 	rm -f $(OBJECTS) $(EXAMPLES) \
 	      arm_sound_code.h arm_sound_code.bin arm_sound_code.elf \
