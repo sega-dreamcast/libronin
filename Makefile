@@ -106,9 +106,9 @@ lib/libz.a:
 	@test -d lib || mkdir lib
 	cd zlib; $(MAKE) libz.a
 	@echo Making convenience links.
-	-ln -s ../zlib/libz.a lib
-	-ln -s zlib/zlib.h .
-	-ln -s zlib/zconf.h .
+	rm -f lib/libz.a && ln -s ../zlib/libz.a lib/
+	rm -f zlib.h && ln -s zlib/zlib.h .
+	rm -f zconf.h && ln -s zlib/zconf.h .
 
 include: $(DISTHEADERS) zlib/zlib.h zlib/zconf.h lwipopts.h lwip/include/lwip/*.h \
 			lwip/include/netif/*.h lwip/include/ipv4/lwip/*.h \
@@ -168,14 +168,29 @@ dist: $(DISTHEADERS)
 		cp -R lwip/include/ipv4/lwip disttmp/ronin/include/ && \
 		cp -R lwip/arch/dc/include/arch disttmp/ronin/include/ && \
 		cp -R lwip/arch/dc/include/netif disttmp/ronin/include/ && \
-		find disttmp -type d -a -name CVS -exec rm -rf {} \; && \
+		find disttmp -type d -name CVS | xargs rm -rf &&\
 		(cd disttmp && tar cvf - ronin) | gzip -c > ronin-dist.tar.gz && \
+		rm -rf disttmp/ronin && mkdir disttmp/ronin-src && \
+		make clean && \
+		mkdir disttmp/ronin-src/tools && \
+		cp tools/ipupload.pike tools/ipconsole.pike tools/encode_armcode.pike disttmp/ronin-src/tools/ && \
+		$(MAKE) arm_sound_code.h && \
+		cp *.c *.s *.h disttmp/ronin-src && \
+		cp -R lwip disttmp/ronin-src && \
+		cp -R zlib disttmp/ronin-src && \
+		cp Makefile disttmp/ronin-src && \
+		cp README disttmp/ronin-src && \
+		cp COMPILING disttmp/ronin-src && \
+		cp COPYING disttmp/ronin-src && \
+		cp zlib/README disttmp/ronin-src/ZLIB_README && \
+		cp lwip/COPYING disttmp/ronin-src/LWIP_COPYING && \
+		find disttmp -type d -name CVS | xargs rm -rf &&\
+		(cd disttmp && tar cvf - ronin-src) | gzip -c > ronin-dist-src.tar.gz && \
 		echo "remember to tag and bump version if you didn't already." && \
 		rm -rf disttmp; \
 	else \
 		echo "Parts of NETCD/NETSERIAL found in libs!"; \
 	fi;
-
 else
 dist:
 	@echo "You must disable NETCD/NETSERIAL!"
@@ -211,7 +226,7 @@ test-videomodes: examples/ex_videomodes.elf
 
 #ARM sound code
 arm_sound_code.h: arm_sound_code.bin
-	./encode_armcode.pike < $< > $@
+	./tools/encode_armcode.pike < $< > $@
 
 arm_sound_code.bin: arm_sound_code.elf
 	arm-elf-objcopy -O binary $< $@
@@ -220,17 +235,10 @@ arm_sound_code.elf: arm_startup.o arm_sound_code.o
 	arm-elf-gcc $(ARMFLAGS) -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -lgcc
 
 arm_sound_code.o: arm_sound_code.c soundcommon.h
-	arm-elf-gcc -c -Ilibmad -Wall $(ARMFLAGS) -Wundefined   -o $@ $<
-
-# -DMPEG_AUDIO
+	arm-elf-gcc -c -Wall $(ARMFLAGS) -Wundefined   -o $@ $<
 
 arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
-
-#Serial code that hangs
-stella.elf: examples/ex_serial.c examples/ex_serial.o lib/libronin.a serial.h Makefile
-	$(CCC) -Wl,-Ttext=0x8c020000 $(CRT0) examples/ex_serial.o $(LINK)
-
 
 #Automatic extension conversion.
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec .bin
