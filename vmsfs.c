@@ -75,7 +75,7 @@ static int frombcd(int n)
   return 10*((n>>4)&15)+(n&15);
 }
 
-void vmsfs_timestamp_to_bcd(unsigned char *bcd, struct timestamp *tstamp)
+void vmsfs_timestamp_to_bcd(unsigned char *bcd, const struct timestamp *tstamp)
 {
   int century = tstamp->year/100;
   bcd[0] = tobcd(century);
@@ -88,7 +88,7 @@ void vmsfs_timestamp_to_bcd(unsigned char *bcd, struct timestamp *tstamp)
   bcd[7] = tobcd(tstamp->wkday);
 }
 
-void vmsfs_timestamp_from_bcd(struct timestamp *tstamp, unsigned char *bcd)
+void vmsfs_timestamp_from_bcd(struct timestamp *tstamp, const unsigned char *bcd)
 {
   tstamp->year = frombcd(bcd[0])*100+frombcd(bcd[1]);
   tstamp->month = frombcd(bcd[2]);
@@ -548,7 +548,7 @@ int vmsfs_next_dir_entry(struct dir_iterator *i, struct dir_entry *d)
   return 1;
 }
 
-int vmsfs_next_named_dir_entry(struct dir_iterator *i, struct dir_entry *d, char *name)
+int vmsfs_next_named_dir_entry(struct dir_iterator *i, struct dir_entry *d, const char *name)
 {
   while(vmsfs_next_dir_entry(i, d))
     if(d->entry[0] && !strncmp(d->entry+4, name, 12))
@@ -582,7 +582,7 @@ int vmsfs_write_dir_entry(struct dir_entry *d)
   return 1;
 }
 
-int vmsfs_open_file(struct superblock *super, char *name,
+int vmsfs_open_file(struct superblock *super, const char *name,
 		    struct vms_file *file)
 {
   file->super = super;
@@ -727,16 +727,16 @@ static int calc_crc(const unsigned char *buf, int size, int n)
  *!
  *! Returns 0 on failure.
  */
-int vmsfs_create_file(struct superblock *super, char *name,
+int vmsfs_create_file(struct superblock *super, const char *name,
 		      struct vms_file_header *header,
-		      void *icons, void *eyecatch,
-		      void *data, unsigned long datasize,
-		      struct timestamp *tstamp)
+		      const void *icons, const void *eyecatch,
+		      const void *data, unsigned long datasize,
+		      const struct timestamp *tstamp)
 {
   unsigned char *header_ptr = (unsigned char *)header;
-  unsigned char *icon_ptr = icons;
-  unsigned char *eye_ptr = eyecatch;
-  unsigned char *data_ptr = data;
+  const unsigned char *icon_ptr = icons;
+  const unsigned char *eye_ptr = eyecatch;
+  const unsigned char *data_ptr = data;
   unsigned long headersize = 128, iconsize=(header->numicons)<<9, eyesize;
   unsigned long padsize, totsize;
   int blkcnt, freecnt = vmsfs_count_free(super);

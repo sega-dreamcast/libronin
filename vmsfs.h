@@ -82,8 +82,8 @@ struct vms_file {
 
 START_EXTERN_C
 char *vmsfs_describe_error();
-void vmsfs_timestamp_to_bcd(unsigned char *bcd, struct timestamp *tstamp);
-void vmsfs_timestamp_from_bcd(struct timestamp *tstamp, unsigned char *bcd);
+void vmsfs_timestamp_to_bcd(unsigned char *bcd, const struct timestamp *tstamp);
+void vmsfs_timestamp_from_bcd(struct timestamp *tstamp, const unsigned char *bcd);
 int vmsfs_check_unit(int unit, int part, struct vmsinfo *info);
 int vmsfs_beep(struct vmsinfo *info, int on);
 int vmsfs_read_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr);
@@ -96,18 +96,18 @@ int vmsfs_count_free(struct superblock *s);
 int vmsfs_find_free_block(struct superblock *s);
 void vmsfs_open_dir(struct superblock *s, struct dir_iterator *i);
 int vmsfs_next_dir_entry(struct dir_iterator *i, struct dir_entry *d);
-int vmsfs_next_named_dir_entry(struct dir_iterator *i, struct dir_entry *d, char *name);
+int vmsfs_next_named_dir_entry(struct dir_iterator *i, struct dir_entry *d, const char *name);
 int vmsfs_next_empty_dir_entry(struct dir_iterator *i, struct dir_entry *d);
 int vmsfs_write_dir_entry(struct dir_entry *d);
-int vmsfs_open_file(struct superblock *super, char *name,
+int vmsfs_open_file(struct superblock *super, const char *name,
                     struct vms_file *file);
 int vmsfs_read_file(struct vms_file *file, unsigned char *buf,
                     unsigned int cnt);
-int vmsfs_create_file(struct superblock *super, char *name,
+int vmsfs_create_file(struct superblock *super, const char *name,
                       struct vms_file_header *header,
-                      void *icons, void *eyecatch,
-                      void *data, unsigned long datasize,
-                      struct timestamp *tstamp);
+                      const void *icons, const void *eyecatch,
+                      const void *data, unsigned long datasize,
+                      const struct timestamp *tstamp);
 extern int vmsfs_errno;
 END_EXTERN_C
 
