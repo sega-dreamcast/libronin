@@ -60,8 +60,10 @@ int _lseek (int file, int ptr, int dir) { return lseek(file, ptr, dir); }
 int _write ( int file, char *ptr, int len) {
   int n=len;
   if(file!=1 && file!=2) return -1;
+#ifndef NOSERIAL
   while(n-->0) serial_putc(*ptr++);
   serial_flush();
+#endif
   return len;
 }
 int _close (int file) { return close(file); }
