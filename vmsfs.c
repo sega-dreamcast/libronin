@@ -464,13 +464,13 @@ int vmsfs_write_dir_entry(struct dir_entry *d)
   if(!vmsfs_read_block(d->dir->super->info, d->dblk, tmpblk))
   {
     vmsfs_errno = VMSFS_ERDIR;
-    return 0;
+    return -VMSFS_ERDIR;
   }
   memcpy(tmpblk+d->dpos*0x20, d->entry, 0x20);
   if(!vmsfs_write_block(d->dir->super->info, d->dblk, tmpblk))
   {
     vmsfs_errno = VMSFS_EWDIR;
-    return 0;
+    return -VMSFS_EWDIR;
   }
     
   return 1;
@@ -643,7 +643,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
     {
       vmsfs_errno = VMSFS_ENODIR;
       report("No empty dir entry found.\n");
-      return 0;
+      return -VMSFS_ENODIR;
     }
     tmpentry.entry[2] = 0xfa;
     tmpentry.entry[3] = 0xff;
@@ -662,7 +662,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
     ous_want=blkcnt;
     ous_have=freecnt;
     report("Not enough space left on device.\n");
-    return 0;
+    return -VMSFS_EOUS;
   }
   while(blkcnt--) {
     int n, blkfill = super->info->blocksz;
@@ -703,7 +703,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
 	padsize -= n;
 	blkfill -= n;	
       } else {
-        report("Incorrect indata\n");
+        report("Incorrect input\n");
 	return 0;
       }
     }
@@ -714,7 +714,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
         vmsfs_errno = VMSFS_ETRUNK;
         report("FATAL: Out of allocatable blocks. File trunkated!"
                " This should not happen.\n");
-	return 0;
+	return -VMSFS_ETRUNK;
       }
       else
 	nextblk = 0xfffc;
@@ -732,7 +732,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
     {
       vmsfs_errno = VMSFS_EBLOCK;
       report("Failed to write block.\n"); //Joytech gets this.
-      return 0;
+      return -VMSFS_EBLOCK;
     }
   }
   while(nextblk != 0xfffa && nextblk != 0xfffc) {
@@ -742,7 +742,7 @@ int vmsfs_create_file(struct superblock *super, char *name,
   }
   if(headersize || iconsize || eyesize || datasize || padsize)
   {
-    report("Incorrect indata. (2)\n");
+    report("Incorrect input. (2)\n");
     return 0;
   }
   return vmsfs_sync_superblock(super) && vmsfs_write_dir_entry(&tmpentry);
