@@ -1,5 +1,5 @@
 CCC = sh-elf-c++ -fno-rtti
-CC = sh-elf-gcc
+CC = sh-elf-gcc -Wall
 LD = sh-elf-ld -EL
 AS = sh-elf-as -little
 AR = sh-elf-ar
