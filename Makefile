@@ -10,20 +10,20 @@ AR = sh-elf-ar
 #Must be O4 to handle long jumps correctly.
 OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-defer-pop -fforce-addr -fstrict-aliasing -funroll-loops -fdelete-null-pointer-checks -fno-exceptions
 CPUFLAGS = -ml  -m4-single-only
-INCLUDES = -I. -Izlib -Ilwip/include -Ilwip/include/ipv4 -Ilwip/arch/dc/include
+INCLUDES = -Iinclude -Iinclude/ronin
 
 # TYPE can be elf, srec or bin
 TYPE = elf
 EXTRALIBS += -lm
-CRT0=crt0.o
+CRT0=lib/crt0.o
 ifeq "$(TYPE)" "bin"
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Lzlib -lz -L. -lronin-noserial -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Llib -lz -lronin-noserial -lgcc -lc
 else
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Lzlib -lz -L. -lronin -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Llib -lz -lronin -lgcc -lc
 endif
 
 EXAMPLEFLAGS = -DVMUCOMPRESS
-CCFLAGS = $(OPTIMISE) $(CPUFLAGS) $(EXAMPLEFLAGS) -I. -DDC -DDREAMCAST 
+CCFLAGS = $(OPTIMISE) $(CPUFLAGS) $(EXAMPLEFLAGS) -DDC -DDREAMCAST 
 
 CFLAGS = $(CCFLAGS)
 
@@ -80,28 +80,53 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
-most: crt0.o libronin.a libz.a
+most: include lib/crt0.o lib/libronin.a lib/libz.a
 
-all: crt0.o libronin.a libronin-noserial.a cleanish libz.a
+all: include lib/crt0.o lib/libronin.a lib/libronin-noserial.a cleanish lib/libz.a
 
-libronin.a: $(OBJECTS) arm_sound_code.h Makefile
+lib/crt0.o: crt0.s
+	@test -d lib || mkdir lib
+	$(AS) $< -o $@
+
+lib/libronin.a: $(OBJECTS) arm_sound_code.h Makefile
+	@test -d lib || mkdir lib
 	rm -f $@ && $(AR) rs $@ $(OBJECTS)
 
 noserial-dummy: $(OBJECTS) arm_sound_code.h Makefile
 	@echo Dummy done.
 
-libronin-noserial.a: libronin.a
+lib/libronin-noserial.a: lib/libronin.a
 	$(MAKE) cleanish
-	rm -f libronin-serial.a
+	rm -f lib/libronin-serial.a
 	$(MAKE) CCFLAGS="$(CCFLAGS) -DNOSERIAL" CFLAGS="$(CCFLAGS) -DNOSERIAL" noserial-dummy
 	rm -f $@ && $(AR) rs $@ $(OBJECTS)
 
-libz.a:
+lib/libz.a:
+	@test -d lib || mkdir lib
 	cd zlib; $(MAKE) libz.a
 	@echo Making convenience links.
-	-ln -s zlib/libz.a .
+	-ln -s ../zlib/libz.a lib
 	-ln -s zlib/zlib.h .
 	-ln -s zlib/zconf.h .
+
+include: $(DISTHEADERS) zlib/zlib.h zlib/zconf.h lwipopts.h lwip/include/lwip/*.h \
+			lwip/include/netif/*.h lwip/include/ipv4/lwip/*.h \
+			lwip/arch/dc/include/arch/*.h lwip/arch/dc/include/netif/*.h
+	rm -rf include
+	mkdir include
+	mkdir include/ronin
+	mkdir include/lwip
+	mkdir include/netif
+	mkdir include/arch
+	for h in $(DISTHEADERS); do ln -s -f ../../$$h include/ronin/; done
+	ln -s -f ../zlib/zlib.h ../zlib/zconf.h include/
+	ln -s -f ../lwipopts.h include/
+	cd include/lwip && ln -s -f ../../lwip/include/lwip/*.h ./
+	cd include/lwip && ln -s -f ../../lwip/include/ipv4/lwip/*.h ./
+	cd include/netif && ln -s -f ../../lwip/include/netif/*.h ./
+	cd include/netif && ln -s -f ../../lwip/arch/dc/include/netif/*.h ./
+	cd include/arch && ln -s -f ../../lwip/arch/dc/include/arch/*.h ./
+
 
 cleanish:
 	rm -f $(OBJECTS) $(EXAMPLES) \
@@ -109,30 +134,31 @@ cleanish:
 	      arm_sound_code.o arm_startup.o
 
 clean: cleanish
-	rm -f crt0.o
-	rm -f libronin.a 
-	rm -f libronin-noserial.a 
+	rm -f lib/crt0.o
+	rm -f lib/libronin.a 
+	rm -f lib/libronin-noserial.a 
+	rm -f lib/libz.a
 	cd zlib && $(MAKE) clean
 
-examples: libronin.a $(EXAMPLES)
+examples: lib/libronin.a $(EXAMPLES)
 
 ifeq "$(NETSERIAL)$(NETCD)" "00"
 DISTHEADERS=cdfs.h common.h dc_time.h gddrive.h gfxhelper.h gtext.h maple.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h
 dist: $(DISTHEADERS) 
 	@$(MAKE) clean && \
 	$(MAKE) all && \
-	if [ `ar -t libronin-noserial.a|egrep 'net(cd|serial)'|wc -l` = 0 -a \
-	     `ar -t libronin.a | egrep 'net(cd|serial)' | wc -l` = 0 ]; then \
-		mkdir disttmp && mkdir disttmp/ronin && \
+	if [ `ar -t lib/libronin-noserial.a|egrep 'net(cd|serial)'|wc -l` = 0 -a \
+	     `ar -t lib/libronin.a | egrep 'net(cd|serial)' | wc -l` = 0 ]; then \
+		mkdir disttmp && mkdir disttmp/ronin && mkdir disttmp/ronin/lib && \
 		mkdir disttmp/ronin/include && mkdir disttmp/ronin/include/ronin && \
-		cp libronin.a disttmp/ronin && \
-		cp libronin-noserial.a disttmp/ronin && \
-		cp crt0.o disttmp/ronin && \
+		cp lib/libronin.a disttmp/ronin/lib && \
+		cp lib/libronin-noserial.a disttmp/ronin/lib && \
+		cp lib/crt0.o disttmp/ronin/lib && \
 		cp $(DISTHEADERS) disttmp/ronin/include/ronin && \
 		cp README disttmp/ronin && \
 		cp COPYING disttmp/ronin && \
 		cp zlib/README disttmp/ronin/ZLIB_README && \
-		cp zlib/libz.a disttmp/ronin && \
+		cp zlib/libz.a disttmp/ronin/lib && \
 		cp zlib/zlib.h disttmp/ronin/include && \
 		cp zlib/zconf.h disttmp/ronin/include && \
 		cp lwip/COPYING disttmp/ronin/LWIP_COPYING && \
@@ -194,7 +220,7 @@ arm_sound_code.elf: arm_startup.o arm_sound_code.o
 	arm-elf-gcc $(ARMFLAGS) -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -lgcc
 
 arm_sound_code.o: arm_sound_code.c soundcommon.h
-	arm-elf-gcc -c -I libmad -Wall $(ARMFLAGS) -Wundefined   -o $@ $<
+	arm-elf-gcc -c -Ilibmad -Wall $(ARMFLAGS) -Wundefined   -o $@ $<
 
 # -DMPEG_AUDIO
 
@@ -202,20 +228,20 @@ arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
 
 #Serial code that hangs
-stella.elf: examples/ex_serial.c examples/ex_serial.o libronin.a serial.h Makefile
+stella.elf: examples/ex_serial.c examples/ex_serial.o lib/libronin.a serial.h Makefile
 	$(CCC) -Wl,-Ttext=0x8c020000 $(CRT0) examples/ex_serial.o $(LINK)
 
 
 #Automatic extension conversion.
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec .bin
 
-.c.elf: libronin.a crt0.o Makefile
+.c.elf: lib/libronin.a $(CRT0) Makefile
 	$(CC) -Wl,-Ttext=0x8c020000 $(CCFLAGS) $(CRT0) $*.c $(LINK) -lm
 
-.c.bin: libronin-noserial.a crt0.o Makefile
+.c.bin: lib/libronin-noserial.a $(CRT0) Makefile
 	$(CC) -Wl,-Ttext=0x8c010000,--oformat,binary -DNOSERIAL $(CCFLAGS) $(CRT0) $*.c $(LINK)
 
-.c.srec: libronin.a crt0.o Makefile
+.c.srec: lib/libronin.a $(CRT0) Makefile
 	$(CC) -Wl,-Ttext=0x8c020000,--oformat,srec $(CCFLAGS) $(CRT0) $*.c $(LINK)
 
 .cpp.o:
@@ -252,7 +278,7 @@ sound.o: arm_sound_code.h
 cdfs.o: gddrive.h
 malloc.o: Makefile
 notlibc.o: Makefile
-examples/ex_gtext.$(TYPE): libronin.a
-examples/ex_showpvr.$(TYPE): libronin.a
-examples/ex_cloud.$(TYPE): libronin.a
-examples/ex_malloc.elf: libronin.a
+examples/ex_gtext.$(TYPE): lib/libronin.a
+examples/ex_showpvr.$(TYPE): lib/libronin.a
+examples/ex_cloud.$(TYPE): lib/libronin.a
+examples/ex_malloc.elf: lib/libronin.a
