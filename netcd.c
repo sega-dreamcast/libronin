@@ -98,7 +98,7 @@ EXTERN_C int read(int fd, void *buf, unsigned int len)
   while(len > 1024) {
     res = read(fd, buf, 1024);
     if(res <= 0)
-      return res;
+      return (res>=0? res+tot : res);
     buf = ((char *)buf)+res;
     len -= res;
     tot += res;
@@ -125,7 +125,7 @@ EXTERN_C int pread(int fd, void *buf, unsigned int len, unsigned int offset)
   while(len > 1024) {
     res = pread(fd, buf, 1024, offset);
     if(res <= 0)
-      return res;
+      return (res>=0? res+tot : res);
     buf = ((char *)buf)+res;
     len -= res;
     offset += res;
