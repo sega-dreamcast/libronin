@@ -53,8 +53,8 @@ struct soundstatus {
 
 #define ADJUST_BUFFER_SIZE(n) ((n)&~31)
 
-/* .5s buffer for menu */
-#define RING_BUFFER_SAMPLES ADJUST_BUFFER_SIZE(FREQ1/2)
+/* 1s buffer for menu */
+#define RING_BUFFER_SAMPLES ADJUST_BUFFER_SIZE(FREQ1)
 
 /* .25s buffer for game */
 #define RING_BUFFER_SAMPLES0 ADJUST_BUFFER_SIZE(FREQ/4)
