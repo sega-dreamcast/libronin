@@ -3,9 +3,9 @@
  * Rudimentary aproximations and stubs for various libc functions. 
  */
 
-#include <unistd.h> /* (s)brk() definitions */
-#include <stddef.h>   /* for size_t */
-#include <stdlib.h>
+//#include <unistd.h> /* (s)brk() definitions */
+//#include <stddef.h>   /* for size_t */
+//#include <stdlib.h>
 #include <stdio.h>
 #include "common.h"
 #include "dc_time.h"
@@ -37,7 +37,7 @@ int fprintf(FILE *stream,  const  char  *format, ...)
  {report("fprintf ignored\n");return -1;}
 int printf(const char  *format, ...){report("printf ignored\n");return -1;}
 int fputs( const char *s, FILE *stream ){report("fputs ignored\n"); return -1;}
-int __write(int __fd, __const __ptr_t __buf, size_t __n){report("__write ignored\n"); return -1;}
+int __write(){report("__write ignored\n"); return -1;}
 FILE *fopen(const char *f, const char *m){report("fopen ignored\n"); return 0;}
 int __isnan(){} //Expect warning.
 void __assert_fail(char *message){report("__asser_fail ignored\n");}
@@ -65,7 +65,7 @@ void exit(int rcode)
 #define MEMEND   0x8cf00000
 static int total_size;
 
-#ifdef REALMALLOC
+#ifndef OLDMALLOC
 static int end_break=MEMSTART;
 
 int brk( void *ebdds ){reportf(" brk(%p) hardcoded fail\n", ebdds); return -1;}

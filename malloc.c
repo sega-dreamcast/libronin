@@ -1,4 +1,4 @@
-#ifdef REALMALLOC
+#ifndef OLDMALLOC
 /*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain.  Use, modify, and
@@ -241,7 +241,7 @@
 #define MORECORE_FAILURE    ((void*)(-1))
 
 /* Use the supplied emulation of mmap and munmap */
-#define HAVE_MMAP 1
+#define HAVE_MMAP 0
 #define MUNMAP_FAILURE  (-1)
 #define MMAP_CLEARS 1
 
@@ -262,8 +262,8 @@ static int slrelease(int *sl);
 static long getpagesize(void);
 static long getregionsize(void);
 static void *sbrk(long size);
-static void *mmap(void *ptr, long size, long prot, long type, long handle, long arg);
-static long munmap(void *ptr, long size);
+//static void *mmap(void *ptr, long size, long prot, long type, long handle, long arg);
+//static long munmap(void *ptr, long size);
 
 static void vminfo (unsigned long *free, unsigned long *reserved, unsigned long *committed);
 static int cpuinfo (int whole, unsigned long *kernel, unsigned long *user);
@@ -675,7 +675,7 @@ extern Void_t*     sbrk();
 */
 
 #ifndef HAVE_MMAP
-#define HAVE_MMAP 1
+#define HAVE_MMAP 0
 
 /* 
    Standard unix mmap using /dev/zero clears memory so calloc doesn't
@@ -740,6 +740,7 @@ extern Void_t*     sbrk();
 */
 
 
+#define malloc_getpagesize 1024
 #ifndef malloc_getpagesize
 
 #ifndef LACKS_UNISTD_H
@@ -4567,12 +4568,14 @@ void mSTATs()
 #endif
 
 
+#ifndef DREAMCAST
   fprintf(stderr, "max system bytes = %10lu\n",
           (unsigned long)(mi.usmblks));
   fprintf(stderr, "system bytes     = %10lu\n",
           (unsigned long)(mi.arena + mi.hblkhd));
   fprintf(stderr, "in use bytes     = %10lu\n",
           (unsigned long)(mi.uordblks + mi.hblkhd));
+#endif
 
 
 #ifdef WIN32 

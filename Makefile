@@ -20,7 +20,7 @@ else
 LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
 endif
 
-CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I.
+CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. #-DOLDMALLOC
 
 CFLAGS = $(CCFLAGS)
 
@@ -33,6 +33,7 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_vmsfscheck.$(TYPE) \
 	   examples/ex_gtext.$(TYPE) \
 	   examples/ex_showpvr.$(TYPE) \
+	   examples/ex_malloc.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
@@ -80,6 +81,9 @@ test-clouds: examples/ex_clouds.elf
 
 test-control: examples/ex_control.elf
 	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_control.$(TYPE)
+
+test-malloc: examples/ex_malloc.elf
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_malloc.$(TYPE)
 
 
 #ARM sound code
@@ -149,6 +153,8 @@ sound.o: arm_sound_code.h
 
 #Nice to have for special (libronin) development purposes.
 cdfs.o: gddrive.h
+malloc.o: Makefile
+notlibc.o: Makefile
 examples/ex_gtext.$(TYPE): libronin.a
 examples/ex_showpvr.$(TYPE): libronin.a
 examples/ex_cloud.$(TYPE): libronin.a
