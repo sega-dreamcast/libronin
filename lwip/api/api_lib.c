@@ -30,7 +30,7 @@
  * 
  * Author: Adam Dunkels <adam@sics.se>
  *
- * $Id: api_lib.c,v 1.1 2003-03-17 21:57:49 marcus Exp $
+ * $Id: api_lib.c,v 1.2 2003-03-18 22:45:17 marcus Exp $
  */
 
 /* This is the part of the API that is linked with
@@ -175,6 +175,7 @@ netbuf_copy_partial(struct netbuf *buf, void *dataptr, u16_t len, u16_t offset)
 	  return;
 	}
       }
+      offset = 0; /* Z */
     }
   }
 }
