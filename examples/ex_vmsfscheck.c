@@ -12,7 +12,7 @@
 //gtext
 #include "video.h"
 #include "gtext.h"
-#include "cdfs.h"
+//#include "cdfs.h"
 #include "ta.h"
 
 
@@ -71,6 +71,8 @@ static unsigned short palette[] = { /* ARGB4 */
  0xfacc, 0xfddc, 0xf8ac, 0xf68c, 0xf02c, 0xf46c, 0xf688, 0xfa88, 
  0xf864, 0xfea8, 0xf224, 0xf004, 0xffff, 0xffff, 0xffff, 0xffff,
 };
+
+#include "encoded_font.h"
 
 static int sram_save_unit = -1;
 static struct vmsinfo info;
@@ -263,14 +265,18 @@ int main(int argc, char **argv)
   //end gtext
   init_lines();
 
-  report("Setting up GD drive ... ");
-  cdfs_init();
-  report("GD OK\r\n");
-  gwrite("GD OK", C_GREEN);
 
-  /* There needs to be a font on the CD */
-  the_font = load_font( "/GFX/DEFAULT.FNT" );
+  /* Normally you would load a font of CD, like this:
+     report("Setting up GD drive ... ");
+     cdfs_init();
+     report("GD OK\r\n");
+     gwrite("GD OK", C_GREEN);
+     the_font = load_font( "/GFX/DEFAULT.FNT" );
 
+     But when sending small test applications around a font encoded
+     into the binary might be good: */
+
+  the_font = load_memfont( cybersans );
   report("Font loaded, test starting.\n");
   gwrite("Font loaded, test starting ...", C_GREEN);
 
@@ -314,21 +320,6 @@ int main(int argc, char **argv)
     free(RESTOREDRAM);
   }
 
-  usleep(15000*60*10);
+  usleep(15000*60*10); //Show the result for a while.
   return 0;
 }
-
-/*
-#define C_RED   0xff0000
-#define C_GREEN 0x00ff00
-#define C_BLUE  0x0000ff
-#define C_MAGENTA (C_RED | C_BLUE)
-#define C_YELLOW (C_RED | C_GREEN)
-#define C_ORANGE (C_RED | 0x7f00)
-#define C_WHITE 0xffffff
-#define C_BLACK 0
-
-#define C_DARK_ORANGE 0x7f3f00
-
-#define C_GREY   0x7f7f7f
-*/
