@@ -1,4 +1,5 @@
 #include "cdfs.h"
+//FIXME: A "gddrive.h" would not be a bad idea.
 
 #define ERR_SYSERR   -1
 #define ERR_DIRERR   -2
@@ -145,7 +146,6 @@ static int read_toc(struct TOC *toc, int session)
 static int read_sectors(char *buf, int sec, int num)
 {
   struct { int sec, num; void *buffer; int dunno; } param;
-  int i;
   param.sec = sec;
   param.num = num;
   param.buffer = buf;
@@ -156,7 +156,6 @@ static int read_sectors(char *buf, int sec, int num)
 static int read_sectors_async(char *buf, int sec, int num)
 {
   struct { int sec, num; void *buffer; int dunno; } param;
-  int i;
   param.sec = sec;
   param.num = num;
   param.buffer = buf;

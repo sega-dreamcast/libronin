@@ -126,7 +126,7 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   int laceoffset=0;
 
   int shift, lines, hvcounter, modulo, words_per_line, vpos;
-  unsigned int tmp, videoflags, displaytmp, attribs;
+  unsigned int tmp, videoflags, attribs;
 
   volatile unsigned int *vbl = (volatile unsigned int *)(void *)0xa05f810c;
 
