@@ -12,7 +12,7 @@
 start:
 	! First, make sure to run in the P2 area
         
-        	mov.l	setup_cache_addr,r0
+       	mov.l	setup_cache_addr,r0
 	mov.l	p2_mask,r1
 	or	r1,r0
 	jmp	@r0
@@ -60,11 +60,25 @@ init:
 	ldc	r0,sr
 
 
+	! Set up floating point ops, call constructors, and jump to main
 	mov	#0,r2
-	mov	#0,r1
-	! Set up floating point ops, and jump to main
-	lds	r1,fpscr
+	lds	r2,fpscr
+	sts.l	pr,@-r15
+	mov.l	ctors_start,r0
+.ctors_loop:	
+	mov.l	ctors_end,r1
+	cmp/eq	r0,r1
+	bt	.endctors
+	mov.l	@r0+,r1
+	jsr	@r1
+	mov.l	r0,@-r15
+	bra	.ctors_loop
+	mov.l	@r15+,r0
+.endctors:
+	lds.l	@r15+,pr
+
 	mov.l	main_addr,r0
+	mov	#0,r1
 	jmp	@r0
 	mov	r1,r0
 
@@ -88,6 +102,10 @@ bss_start_addr:
 	.long	__bss_start
 bss_end_addr:
 	.long	_end
+ctors_start:
+	.long	___ctors
+ctors_end:	
+	.long	___ctors_end
 start_addr:
 	.long	start
 ccr_addr:
