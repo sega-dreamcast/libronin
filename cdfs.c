@@ -27,6 +27,7 @@ static unsigned int dir_buffer[2048/4];
 static int drive_inited = -1;
 static int secbuf_secs[NUM_BUFFERS];
 static int cwd_sec, cwd_len;
+static int discchange_count;
 
 /*
  * libc like support
@@ -72,6 +73,7 @@ static int gdfs_errno_to_errno(int n)
      current_toc = NULL;
      return ERR_NODISK;
    case 6:
+     discchange_count++;
      drive_inited = -1;
      current_toc = NULL;
      return ERR_DISKCHG;
@@ -108,6 +110,11 @@ static int exec_cmd(int cmd, void *param)
 {
   int f = send_cmd(cmd, param);
   return wait_cmd(f);
+}
+
+int cdfs_diskchanges()
+{
+  return discchange_count;
 }
 
 static int init_drive()
