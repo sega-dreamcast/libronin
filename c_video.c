@@ -98,6 +98,13 @@ void dc_set_border( unsigned int color )
 }
 
 
+/* Set up video to use TV-mode (darker stripes every other line) for
+   displays with a vertical resolution of 480 pixels. */
+void dc_tvmode(int on)
+{
+  fb_devconfig.dc_stripes = on;
+}
+
 /* Set up video registers to the desired
    video mode
   
@@ -374,8 +381,6 @@ void dc_reset_screen( int hires, int lace )
   extern void store_q_clear(void *ptr, int cnt);
   int i, tvmode=fb_devconfig.dc_stripes, cable = dc_check_cable();
 
-  reportf("tvmode: %d\n", tvmode);
-
   fb_devconfig.dc_wid = 640 >> (hires?0:1);
   fb_devconfig.dc_ht  = 480 >> (lace?0:1);
 
@@ -388,9 +393,12 @@ void dc_reset_screen( int hires, int lace )
     TA_POLYMODE2_MIPMAP_D_1_00|TA_POLYMODE2_TEXTURE_REPLACE|
     TA_POLYMODE2_U_SIZE_512|TA_POLYMODE2_V_SIZE_512;
 
-  if(!(cable & CABLE_VGA) || lace)
+  if(cable != 0)
+    tvmode = fb_devconfig.dc_stripes = 0;
+
+  if(lace)
     tvmode = 0;
-  
+
   if(tvmode) {
     /* Use texture based tvmode... */
     dispvar.overlay = 1;
@@ -412,6 +420,9 @@ void dc_reset_screen( int hires, int lace )
   /* When does this happen? if(tvmode) tvmode=0; above should prevent
      this? */
   if(tvmode && lace) {
+    report("FATAL: This should never happend.\n");
+    exit(17);
+
     dispvar.scnbot /= 2;
     lace = 0;
   }
@@ -419,7 +430,11 @@ void dc_reset_screen( int hires, int lace )
   ta_disable_irq();
 
   reportf("Changing res to %d\n", hires+lace);
-  dc_init_video(cable, 1, tvmode, hires+lace,
+  
+  /* Use fb_devconfig.dc_stripes, NOT tvmode here. Otherwise the call
+     will destroy the value of fb_devconfig.dc_stripes set by external
+     calls to dc_init_video. */
+  dc_init_video(cable, 1, fb_devconfig.dc_stripes, hires+lace,
                 fb_devconfig.dc_hz50, fb_devconfig.dc_tvsystem, 
                 fb_devconfig.dc_voffset);
 

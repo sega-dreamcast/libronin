@@ -23,8 +23,10 @@ void dc_draw_string(int x, int y, const char *message, int color);
 void dc_draw_char12(int x, int y, int c, int color);
 void dc_clrscr(int color);
 void dc_multibuffer_set(int show, int draw);
+void dc_tvmode(int on);
 END_EXTERN_C
 
+/* Shouldn't VGA be 0 and RGB be 2? */
 #define CABLE_VGA 2
 #define CABLE_RGB 1
 #define CABLE_COM 3
