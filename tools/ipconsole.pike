@@ -7,24 +7,47 @@ mapping(int:Stdio.File|array(string)) fds = ([]);
 
 string cwd=".";
 
-string find_directory_ci( string base, array dir )
+string low_fixfn(string fn)
 {
-  if( !sizeof( dir ) )
-    return base + "/";
-  foreach( get_dir( base ), string b )
-      if( lower_case(b) == lower_case( dir[0] ) &&
-          file_stat(base+b) && file_stat(base+b)->isdir )
-         return find_directory_ci( combine_path( base, b ), dir[1..] );
-  return 0;
+  string tmp;
+  while((tmp = replace(fn, "//", "/")) != fn) fn = tmp;
+  if(fn[..0]=="/")
+    return (fn == "/"? "." : fn[1..]);
+  else
+    return combine_path(cwd, fn);
 }
 
-Stdio.File open_ci( string filename, string mode )
+string locate_ci(string p)
 {
-    string dir = find_directory_ci( "/", dirname(filename)/"/" );
-    string f = (filename/"/")[-1];
-    foreach( get_dir( dir ), string x )
-       if( lower_case(x) == lower_case(f ) )
-          return Stdio.File( dir+x, mode );
+  string base="";
+  if(p[..0]=="/") {
+    base = "/";
+    p = p[1..];
+  }
+  foreach(p/"/", string comp)
+    if(comp != "") {
+      string r;
+      if(comp == ".")
+	r = comp;
+      else
+	foreach(get_dir(base==""? ".":base)||({}), string c)
+	  if(lower_case(comp) == lower_case(c)) {
+	    r = c;
+	    break;
+	  }
+      if(!r) return 0;
+      base = combine_path(base, r);
+    }
+  return (base==""? ".":base);
+}
+
+string fixfn(string fn)
+{
+  string fn2;
+  fn = low_fixfn(fn);
+  if(!file_stat(fn) && (fn2 = locate_ci(fn)))
+    fn = fn2;
+  return fn;
 }
 
 string bottle_answer(int ser, int res, string|void extra)
@@ -54,15 +77,12 @@ string process_command(int ser, int cmd, string data)
   switch(cmd) {
   case 1:
     fd = generate_fd();
-    Stdio.File f;
-    if(f = open_ci(data, "r")) {
+    Stdio.File f = Stdio.File();
+    if(f->open(fixfn(data), "r")) {
       fds[fd] = f;
-      werror("Openened %s\n", data);
       return bottle_answer(ser, fd);
-    } else {
-      werror("Failed to open %s\n", data);
+    } else
       return bottle_answer(ser, -2);
-    }
   case 2:
     if(sscanf(data, "%-4c%-4c%-4c", fd, pos, len)==3 &&
        fds[fd] && objectp(fds[fd]) && fds[fd]->seek(pos)>=0 &&
@@ -79,10 +99,10 @@ string process_command(int ser, int cmd, string data)
       return bottle_answer(ser, -2);
   case 4:
     fd = generate_fd();
-    string realdir = find_directory_ci("/", data/"/");
     array dir;
-    if(dir = get_dir(realdir)) {
-      fds[fd] = ({ realdir }) + dir;
+    if(dir = get_dir(fixfn(data))) {
+      fds[fd] = ({ fixfn(data) }) + dir; //Array.map(dir, upper_case);
+      //werror("Dir: %O\n", Array.map(dir, upper_case));
       return bottle_answer(ser, fd);
     } else
       return bottle_answer(ser, -2);
@@ -102,8 +122,8 @@ string process_command(int ser, int cmd, string data)
     } else
       return bottle_answer(ser, -2);
   case 7:
-    string newcwd;
-    if(newcwd = find_directory_ci("/", data/"/")) {
+    string newcwd = fixfn(data);
+    if(file_stat(newcwd)) {
       cwd = newcwd;
       return bottle_answer(ser, 0);      
     } else
