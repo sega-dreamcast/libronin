@@ -3,6 +3,7 @@
 
 #include "cdfs.h"
 #include "gddrive.h"
+#include "notlibc.h"
 
 START_EXTERN_C
 #include "net/ether.h"
@@ -174,18 +175,18 @@ EXTERN_C int file_size(int fd)
   return res;
 }
 
-static DIR g_dir;
-
 EXTERN_C DIR *opendir(const char *path)
 {
   int res;
+  DIR *dirp = malloc(sizeof(DIR));
+  if(dirp == NULL) return NULL;
   /* printf("opendir(%s)\n", path); */
   res = docmd(4, path, strlen(path));
   /* printf("res = %d\n", res); */
   if(res >= 0) {
-    g_dir.dd_fd = res;
-    g_dir.dd_loc = 0;
-    return &g_dir;
+    dirp->dd_fd = res;
+    dirp->dd_loc = 0;
+    return dirp;
   } else
     return 0;
 }
@@ -196,6 +197,7 @@ EXTERN_C int closedir(DIR *dirp)
   /* printf("closedir(%p)\n", dirp); */
   res = docmd(5, &dirp->dd_fd, sizeof(dirp->dd_fd));
   /* printf("res = %d\n", res); */
+  free(dirp);
   return res;
 }
 

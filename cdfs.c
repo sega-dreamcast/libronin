@@ -2,6 +2,7 @@
 #include "cdfs.h"
 #include "gddrive.h"
 #include "dc_time.h"
+#include "notlibc.h"
 
 #define ERR_SYSERR   -1
 #define ERR_DIRERR   -2
@@ -454,22 +455,24 @@ int async_wait(int fd)
 
 /* Dir I/O */
 
-static DIR g_dir;
 static struct dirent g_dirent;
 
 DIR *opendir(const char *dirname)
 {
-  if((g_dir.dd_fd = open(dirname, O_DIR|O_RDONLY)) < 0)
+  DIR *dirp = malloc(sizeof(DIR));
+  if(dirp == NULL || (dirp->dd_fd = open(dirname, O_DIR|O_RDONLY)) < 0)
     return NULL;
-  g_dir.dd_loc = 0;
-  g_dir.dd_size = 0;
-  g_dir.dd_buf = (char *)dir_buffer;
-  return &g_dir;
+  dirp->dd_loc = 0;
+  dirp->dd_size = 0;
+  dirp->dd_buf = (char *)dir_buffer;
+  return dirp;
 }
 
 int closedir(DIR *dirp)
 {
-  return close(dirp->dd_fd);
+  int res = close(dirp->dd_fd);
+  free(dirp);
+  return res;
 }
 
 int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **res)
