@@ -1,5 +1,5 @@
-NETSERIAL = 0
-NETCD = 0
+NETSERIAL = 1
+NETCD = 1
 CCC = sh-elf-c++ -fno-rtti
 CC = sh-elf-gcc -Wall
 LD = sh-elf-ld -EL
@@ -10,21 +10,24 @@ AR = sh-elf-ar
 #Must be O4 to handle long jumps correctly.
 OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-rtti -fno-defer-pop -fforce-addr -fstrict-aliasing -fallow-single-precision -funroll-loops -fdelete-null-pointer-checks -fno-exceptions -fconserve-space
 CPUFLAGS = -ml  -m4-single-only
-INCLUDES = -I.
+INCLUDES = -I. -Izlib
 
 # TYPE can be elf, srec or bin
 TYPE = elf
 EXTRALIBS += -lm
 CRT0=crt0.o
 ifeq "$(TYPE)" "bin"
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -L. -lronin-noserial -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Lzlib -lz -L. -lronin-noserial -lgcc -lc
 else
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Lzlib -lz -L. -lronin -lgcc -lc
 endif
 
-CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. -DDC
+EXAMPLEFLAGS = -DVMUCOMPRESS
+CCFLAGS = $(OPTIMISE) $(CPUFLAGS) $(EXAMPLEFLAGS) -I. -DDC -DDREAMCAST 
 
 CFLAGS = $(CCFLAGS)
+
+
 
 
 OBJECTS  = report.o ta.o maple.o video.o c_video.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o
@@ -53,6 +56,8 @@ EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_showpvr.$(TYPE) \
 	   examples/ex_malloc.$(TYPE) \
 	   examples/ex_purupuru.$(TYPE) \
+	   examples/ex_compress.$(TYPE) \
+	   examples/ex_videomodes.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
@@ -133,6 +138,11 @@ test-malloc: examples/ex_malloc.elf
 test-purupuru: examples/ex_purupuru.elf
 	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_purupuru.$(TYPE)
 
+test-compress: examples/ex_compress.elf
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_compress.$(TYPE)
+
+test-videomodes: examples/ex_videomodes.elf
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_videomodes.$(TYPE)
 
 #ARM sound code
 arm_sound_code.h: arm_sound_code.bin
