@@ -322,7 +322,7 @@ static struct {
   unsigned int sec0;
   unsigned int loc;
   unsigned int len;
-  int async;
+  int async, disc_gen;
 } fh[MAX_OPEN_FILES];
 
 int open(const char *path, int oflag, ...)
@@ -360,6 +360,7 @@ int open(const char *path, int oflag, ...)
   fh[fd].loc = 0;
   fh[fd].len = len;
   fh[fd].async = -1;
+  fh[fd].disc_gen = discchange_count;
   return fd+MIN_FD;
 }
 
