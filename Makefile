@@ -11,13 +11,13 @@ CPUFLAGS = -ml  -m4-single-only -mhitachi
 INCLUDES = -I.
 
 # TYPE can be elf, srec or bin
-TYPE = bin
+TYPE = elf
 EXTRALIBS += -lm
 CRT0=crt0.o
 ifeq "$(TYPE)" "bin"
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(CRT0) $(INCLUDES) -o $@ -L. -lronin-noserial -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -L. -lronin-noserial -lgcc -lc
 else
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(CRT0) $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -L. -lronin -lgcc -lc
 endif
 
 CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I.
@@ -25,15 +25,14 @@ CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I.
 CFLAGS = $(CCFLAGS)
 
 
-# TYPE can be elf, srec or bin
-TYPE     = bin
-OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o 
+OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o
 
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_video.$(TYPE) \
 	   examples/ex_vmsfscheck.$(TYPE) \
 	   examples/ex_gtext.$(TYPE) \
+	   examples/ex_showpvr.$(TYPE) \
 
 ARMFLAGS=-mcpu=arm7 -ffreestanding  -O5 -funroll-loops
 
@@ -72,6 +71,10 @@ test-vmufs: examples/ex_vmsfscheck.$(TYPE)
 test-gtext: examples/ex_gtext.$(TYPE) 
 	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_gtext.$(TYPE)
 
+test-showpvr: examples/ex_showpvr.$(TYPE) 
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_showpvr.$(TYPE)
+
+
 #ARM sound code
 arm_sound_code.h: arm_sound_code.bin
 	./encode_armcode.pike < $< > $@
@@ -92,20 +95,20 @@ arm_startup.o: arm_startup.s
 
 #Serial code that hangs
 stella.elf: examples/ex_serial.c examples/ex_serial.o libronin.a serial.h Makefile
-	$(CCC) -Wl,-Ttext=0x8c020000 examples/ex_serial.o $(LINK)
+	$(CCC) -Wl,-Ttext=0x8c020000 $(CRT0) examples/ex_serial.o $(LINK)
 
 
 #Automatic extension conversion.
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .elf .srec .bin
 
 .c.elf: libronin.a crt0.o Makefile
-	$(CC) -Wl,-Ttext=0x8c020000 $(CCFLAGS) $*.c $(LINK)
+	$(CC) -Wl,-Ttext=0x8c020000 $(CCFLAGS) $(CRT0) $*.c $(LINK)
 
 .c.bin: libronin-noserial.a crt0.o Makefile
-	$(CC) -Wl,-Ttext=0x8c010000,--oformat,binary -DNOSERIAL $(CCFLAGS) $*.c $(LINK)
+	$(CC) -Wl,-Ttext=0x8c010000,--oformat,binary -DNOSERIAL $(CCFLAGS) $(CRT0) $*.c $(LINK)
 
 .c.srec: libronin.a crt0.o Makefile
-	$(CC) -Wl,-Ttext=0x8c020000,--oformat,srec $(CCFLAGS) $*.c $(LINK)
+	$(CC) -Wl,-Ttext=0x8c020000,--oformat,srec $(CCFLAGS) $(CRT0) $*.c $(LINK)
 
 .cpp.o:
 #	@echo Compiling $*.cpp
@@ -140,3 +143,4 @@ sound.o: arm_sound_code.h
 #Nice to have for special (libronin) development purposes.
 cdfs.o: gddrive.h
 examples/ex_gtext.$(TYPE): libronin.a gtext.c
+examples/ex_showpvr.$(TYPE): libronin.a

@@ -12,5 +12,6 @@
 #include <ronin/sound.h>
 #include <ronin/ta.h>
 #include <ronin/gtext.h>
+#include <ronin/gfxhelper.h>
 
 #endif /* _RONIN_H */
