@@ -28,6 +28,7 @@ static unsigned int sector_buffer[NUM_BUFFERS][2048/4];
 static unsigned int dir_buffer[2048/4];
 static int drive_inited = -1;
 static int secbuf_secs[NUM_BUFFERS];
+static int cwd_sec, cwd_len;
 
 /*
  * libc like support
@@ -235,6 +236,7 @@ static int find_root(unsigned int *psec, unsigned int *plen)
     return 0;
   }
   saved_sec = saved_len = 0;
+  cwd_sec = cwd_len = 0;
   memset(secbuf_secs, 0, sizeof(secbuf_secs));
   if((r=init_drive())!=0)
     return r;
@@ -296,8 +298,12 @@ int open(const char *path, int oflag, ...)
       break;
   if(fd>=MAX_OPEN_FILES)
     return ERR_NUMFILES;
-  if((r=find_root(&sec, &len)))
-    return r;
+  if(drive_inited && cwd_sec > 0 && *path!='/') {
+    sec = cwd_sec;
+    len = cwd_len;
+  } else
+    if((r=find_root(&sec, &len)))
+      return r;
   while((p = strchr0(path, '/'))) {
     if(p != path)
       if((r = low_find(sec, len, 1, &sec, &len, path, p-path)))
@@ -512,6 +518,16 @@ struct dirent *readdir(DIR *dirp)
   return res;
 }
 
+int chdir(const char *path)
+{
+  int fd = open(path, O_DIR|O_RDONLY);
+  if(fd<0)
+    return fd;
+  cwd_sec = fh[fd].sec0;
+  cwd_len = fh[fd].len;
+  close(fd);
+  return 0;
+}
 
 /* Init function */
 

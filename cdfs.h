@@ -37,6 +37,7 @@ int closedir(DIR *dirp);
 int file_size( int fd );
 int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **res);
 struct dirent *readdir(DIR *dirp);
+int chdir(const char *path);
 void cdfs_init(void);
 END_EXTERN_C
 
