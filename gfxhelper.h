@@ -18,6 +18,9 @@ void paste_image( struct pvr *i, int x, int y, int flags);
 void paste_pvr( struct pvr *i, int x, int y, int flags);
 void paste_pvr_part( struct pvr *i, int x, int y,
                      int tx1, int ty1, int tx2, int ty2, int flags);
+void paste_pvr_scale( struct pvr *i, int x, int y, int x2, int y2, int flags);
+void paste_pvr_scale_a( struct pvr *i, int x, int y, int x2, int y2,
+                        int flags, float alpha);
 void commit_dummy_transpoly();
 END_EXTERN_C
 

@@ -3,6 +3,8 @@
 #include "report.h"
 #include "gfxhelper.h"
 
+/* FIXME: There is a little bit to much redundancy going on between
+   the diffrent texture pasting functions. Macros might be good. */
 
 static struct pvr null_image = { 0,0,0,0,0, { 0 } };
 
@@ -313,6 +315,175 @@ void paste_pvr_part( struct pvr *i, int x, int y,
 
   myvertex.x = w+xf;
   myvertex.u = tx2f*ufoo;
+  myvertex.cmd |= TA_CMD_VERTEX_EOS;
+  ta_commit_list(&myvertex);  
+}
+
+/*! @decl void paste_pvr_scale_a( 
+            struct pvr *, int x, int y, int x2, int y2, int flags)
+ *!
+ *! Scale and paste texture to display by inserting the apropriate
+ *! instructions into the tile accellerator list currently being built.
+ *!
+ *! @seealso
+ *!  @[paste_pvr_part()], @[paste_image()], @[ta_begin_frame()], 
+ *!  @[ta_commit_list()], @[ta_commit_end()], @[ta_commit_frame()]
+ */
+void paste_pvr_scale( struct pvr *i, int x, int y, int x2, int y2, int flags)
+{
+  struct polygon_list mypoly;
+  struct packed_colour_vertex_list myvertex;
+  float w = (float)i->xsize, h = (float)i->ysize;
+  float xf = (float)x, yf = (float)y;
+  float xf2 = (float)x2, yf2 = (float)y2;
+
+  mypoly.cmd =
+    TA_CMD_POLYGON|TA_CMD_POLYGON_TYPE_TRANSPARENT|TA_CMD_POLYGON_SUBLIST|
+    TA_CMD_POLYGON_STRIPLENGTH_2|TA_CMD_POLYGON_TEXTURED|TA_CMD_POLYGON_PACKED_COLOUR;
+  mypoly.mode1 = TA_POLYMODE1_Z_ALWAYS|TA_POLYMODE1_NO_Z_UPDATE;
+  /*
+     0x80  -  src * alpha
+     0x40  -  min(src, dst)
+     0x20  -  src
+     0x10  -  dst * alpha
+     0x08  -  min(src, dst)
+     0x04  -  dst
+
+     0x02  -  party
+     0x01  -  ?
+  */
+  mypoly.mode2 = TA_POLYMODE2_BLEND_SRC_ALPHA|TA_POLYMODE2_BLEND_DST_INVALPHA|
+    TA_POLYMODE2_FOG_DISABLED|
+    TA_POLYMODE2_TEXTURE_CLAMP_U|TA_POLYMODE2_TEXTURE_CLAMP_V|
+    TA_POLYMODE2_BILINEAR_FILTER|TA_POLYMODE2_MIPMAP_D_1_00|
+    TA_POLYMODE2_TEXTURE_REPLACE| i->polymode2;
+#if 1
+  if( flags & 1 )
+  {
+    mypoly.cmd &= ~TA_CMD_POLYGON_TYPE_TRANSPARENT;
+    mypoly.mode2 =
+      TA_POLYMODE2_BLEND_SRC|TA_POLYMODE2_FOG_DISABLED|
+      TA_POLYMODE2_TEXTURE_CLAMP_U|TA_POLYMODE2_TEXTURE_CLAMP_V|
+      /*TA_POLYMODE2_BILINEAR_FILTER|*/TA_POLYMODE2_MIPMAP_D_1_00|
+      TA_POLYMODE2_TEXTURE_REPLACE | i->polymode2;
+  }
+#endif
+  mypoly.texture = i->texturemode;
+
+  mypoly.alpha = mypoly.red = mypoly.green = mypoly.blue = 1.0;
+
+  ta_commit_list(&mypoly);
+
+  myvertex.cmd = TA_CMD_VERTEX;
+  myvertex.colour = 0;
+  myvertex.ocolour = 0;
+  myvertex.z = 0.25;
+
+  myvertex.x = xf;
+  myvertex.y = yf;
+  myvertex.u = 0.0;
+  myvertex.v = 0.0;
+  ta_commit_list(&myvertex);
+
+  myvertex.x = xf2;
+  myvertex.u = w/(8<<((i->polymode2>>3)&7));
+  ta_commit_list(&myvertex);
+
+  myvertex.x = xf;
+  myvertex.y = yf2;
+  myvertex.u = 0.0;
+  myvertex.v = h/(8<<(i->polymode2&7));
+  ta_commit_list(&myvertex);
+
+  myvertex.x = xf2;
+  myvertex.u = w/(8<<((i->polymode2>>3)&7));
+  myvertex.cmd |= TA_CMD_VERTEX_EOS;
+  ta_commit_list(&myvertex);  
+}
+
+/*! @decl void paste_pvr_scale_a( 
+            struct pvr *, int x, int y, int x2, int y2, int flags, float alpha)
+ *!
+ *! Scale and paste texture to display with specified @[alpha] by
+ *! inserting the apropriate instructions into the tile accellerator
+ *! list currently being built. An @[alpha] of 1.0 is opaque and 0.0 is 
+ *! totally transparent.
+ *!
+ *! @seealso
+ *!  @[paste_pvr_part()], @[paste_image()], @[ta_begin_frame()], 
+ *!  @[ta_commit_list()], @[ta_commit_end()], @[ta_commit_frame()]
+ */
+void paste_pvr_scale_a( struct pvr *i, int x, int y, int x2, int y2, 
+                        int flags, float alpha)
+{
+  struct polygon_list mypoly;
+  struct packed_colour_vertex_list myvertex;
+  float w = (float)i->xsize, h = (float)i->ysize;
+  float xf = (float)x, yf = (float)y;
+  float xf2 = (float)x2, yf2 = (float)y2;
+
+  mypoly.cmd =
+    TA_CMD_POLYGON|TA_CMD_POLYGON_TYPE_TRANSPARENT|TA_CMD_POLYGON_SUBLIST|
+    TA_CMD_POLYGON_STRIPLENGTH_2|TA_CMD_POLYGON_TEXTURED|TA_CMD_POLYGON_INTENSITY;
+  mypoly.mode1 = TA_POLYMODE1_Z_ALWAYS|TA_POLYMODE1_NO_Z_UPDATE;
+  /*
+     0x80  -  src * alpha
+     0x40  -  min(src, dst)
+     0x20  -  src
+     0x10  -  dst * alpha
+     0x08  -  min(src, dst)
+     0x04  -  dst
+
+     0x02  -  party
+     0x01  -  ?
+  */
+  mypoly.mode2 = TA_POLYMODE2_BLEND_SRC_ALPHA|TA_POLYMODE2_BLEND_DST_INVALPHA|
+    TA_POLYMODE2_FOG_DISABLED|
+    TA_POLYMODE2_TEXTURE_CLAMP_U|TA_POLYMODE2_TEXTURE_CLAMP_V|
+    TA_POLYMODE2_BILINEAR_FILTER|TA_POLYMODE2_MIPMAP_D_1_00|
+    192| //TA_POLYMODE2_MODULATE_ALPHA
+    TA_POLYMODE2_ENABLE_ALPHA| i->polymode2;
+#if 1
+  if( flags & 1 )
+  {
+    mypoly.cmd &= ~TA_CMD_POLYGON_TYPE_TRANSPARENT;
+    mypoly.mode2 =
+      TA_POLYMODE2_BLEND_SRC|TA_POLYMODE2_FOG_DISABLED|
+      TA_POLYMODE2_TEXTURE_CLAMP_U|TA_POLYMODE2_TEXTURE_CLAMP_V|
+      /*TA_POLYMODE2_BILINEAR_FILTER|*/TA_POLYMODE2_MIPMAP_D_1_00|
+      TA_POLYMODE2_TEXTURE_REPLACE | i->polymode2;
+  }
+#endif
+  mypoly.texture = i->texturemode;
+
+  mypoly.red = mypoly.green = mypoly.blue = 1.0;
+  mypoly.alpha = alpha;
+
+  ta_commit_list(&mypoly);
+
+  myvertex.cmd = TA_CMD_VERTEX;
+  myvertex.colour = 0x3f800000; //0x80ff0000; //Multi with color
+  myvertex.ocolour = 0; //Added to color
+  myvertex.z = 0.25;
+
+  myvertex.x = xf;
+  myvertex.y = yf;
+  myvertex.u = 0.0;
+  myvertex.v = 0.0;
+  ta_commit_list(&myvertex);
+
+  myvertex.x = xf2;
+  myvertex.u = w/(8<<((i->polymode2>>3)&7));
+  ta_commit_list(&myvertex);
+
+  myvertex.x = xf;
+  myvertex.y = yf2;
+  myvertex.u = 0.0;
+  myvertex.v = h/(8<<(i->polymode2&7));
+  ta_commit_list(&myvertex);
+
+  myvertex.x = xf2;
+  myvertex.u = w/(8<<((i->polymode2>>3)&7));
   myvertex.cmd |= TA_CMD_VERTEX_EOS;
   ta_commit_list(&myvertex);  
 }
