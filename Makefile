@@ -24,7 +24,7 @@ CFLAGS=$(CCFLAGS)
 
 # TYPE can be elf or srec
 TYPE     = elf
-OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o
+OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o 
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_video.$(TYPE) \
@@ -112,3 +112,6 @@ stella.elf: examples/ex_serial.c examples/ex_serial.o libronin.a serial.h Makefi
 
 #Extra dependencies.
 sound.o: arm_sound_code.h
+
+#Nice to have for special (libronin) development purposes.
+cdfs.o: gddrive.h

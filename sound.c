@@ -1,3 +1,4 @@
+#include <string.h> //FIXME: External dependecy.
 #include "soundcommon.h"
 #include "sound.h"
 #include "report.h"

@@ -26,17 +26,17 @@ void exit(int rcode);
    multiple definition conflicts. */
 static FILE _stderr;
 FILE *stderr = &_stderr;
-int atexit(void (*function)(void)){  }
+int atexit(void (*function)(void)){ return 0; }
 void abort(){ report("aborted\n"); exit(1); }
 int sprintf(char *str, const char *format, ...)
  {report("sprintf ignored\n");return 0;}
 int fprintf(FILE *stream,  const  char  *format, ...)
  {report("fprintf ignored\n");return -1;}
 int printf(const char  *format, ...){report("printf ignored\n");return -1;}
-int fputs( const char *s, FILE *stream ){report("fputs ignored\n");}
-int __write(){report("__write ignored\n");}
-FILE *fopen(const char *f, const char *m){report("fopen ignored\n");}
-int __isnan(){}
+int fputs( const char *s, FILE *stream ){report("fputs ignored\n"); return -1;}
+int __write(){report("__write ignored\n"); return -1;}
+FILE *fopen(const char *f, const char *m){report("fopen ignored\n"); return 0;}
+int __isnan(){} //Expect warning.
 void __assert_fail(char *message){report("__asser_fail ignored\n");}
 void __main(){}
 void matherr( void *exp ){report("matherr ignored\n");}
@@ -106,7 +106,7 @@ static unsigned int low_read_time()
 
 time_t time(time_t *tloc)
 {
-  unsigned int old, new;
+  unsigned int old, new; //Expect stupid warning.
   time_t tmp;
   if(tloc == NULL)
     tloc = &tmp;

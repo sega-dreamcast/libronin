@@ -1,4 +1,4 @@
-#include <string.h>
+#include <string.h> //FIXME: External dependecy.
 #include "common.h"
 #include "maple.h"
 #include "vmsfs.h"
@@ -262,7 +262,7 @@ int vmsfs_read_block(struct vmsinfo *info, unsigned int blk, unsigned char *ptr)
 			    MAPLE_COMMAND_BREAD, 2, param)) &&
 	 res[0] == MAPLE_RESPONSE_DATATRF && res[3] >= 2+(subblk>>2) &&
 	 read_belong((unsigned int *)(res+4)) == MAPLE_FUNC_MEMCARD &&
-	 read_belong((unsigned int *)(res+8)) == (info->pt<<24)|(phase<<16)|blk)
+	 read_belong((unsigned int *)(res+8)) == ((info->pt<<24)|(phase<<16)|blk))
 	memcpy(ptr+subblk*phase, res+12, subblk);
       else
 	break;
@@ -292,7 +292,8 @@ static int vmsfs_verify_block(struct vmsinfo *info, unsigned int blk, unsigned c
 			    MAPLE_COMMAND_BREAD, 2, param)) &&
 	 res[0] == MAPLE_RESPONSE_DATATRF && res[3] >= 2+(subblk>>2) &&
 	 read_belong((unsigned int *)(res+4)) == MAPLE_FUNC_MEMCARD &&
-	 read_belong((unsigned int *)(res+8)) == (info->pt<<24)|(phase<<16)|blk) {
+	 read_belong((unsigned int *)(res+8)) == ((info->pt<<24)|(phase<<16)|blk))
+      {
 	if(memcmp(ptr+subblk*phase, res+12, subblk))
 	  return 0;
       }

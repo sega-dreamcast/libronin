@@ -1,3 +1,4 @@
+#include <string.h> //FIXME: External dependecy.
 #include "cdfs.h"
 #include "gddrive.h"
 
@@ -108,7 +109,7 @@ static int exec_cmd(int cmd, void *param)
 
 static int init_drive()
 {
-  int i, r;
+  int i, r=0;
   unsigned int param[4];
   int cdxa;
 

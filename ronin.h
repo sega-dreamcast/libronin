@@ -11,5 +11,6 @@
 #include <ronin/video.h>
 #include <ronin/sound.h>
 #include <ronin/ta.h>
+#include <ronin/gtext.h>
 
 #endif /* _RONIN_H */
