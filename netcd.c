@@ -114,6 +114,31 @@ EXTERN_C int read(int fd, void *buf, unsigned int len)
   return res;
 }
 
+EXTERN_C int pread(int fd, void *buf, unsigned int len, unsigned int offset)
+{
+  struct { int fd, pos, len; } cmd;
+  int res;
+  /* printf("pread(%d,%p,%d,%d)\n", fd, buf, len, offset); */
+  if(fd<0 || fd>MAXFD)
+    return -1;
+  while(len > 1024) {
+    res = pread(fd, buf, 1024, offset);
+    if(res <= 0)
+      return res;
+    buf = ((char *)buf)+res;
+    len -= res;
+    offset += res;
+  }
+  cmd.fd = fd;
+  cmd.pos = offset;
+  cmd.len = len;
+  res = docmd(2, &cmd, 12);
+  /* printf("res = %d\n", res); */
+  if(res > 0)
+    memcpy(buf, replybuf, res);
+  return res;
+}
+
 EXTERN_C long lseek(int fd, long pos, int whence)
 {
   /* printf("lseek(%d,%d,%d)\n", fd, pos, whence); */
@@ -126,16 +151,25 @@ EXTERN_C long lseek(int fd, long pos, int whence)
   case SEEK_CUR:
     readpos[fd] += pos;
     break;
-    /*
   case SEEK_END:
-    readpos[fd] = maxpos[fd] + pos;
+    readpos[fd] = file_size(fd) + pos;
     break;
-    */
   default:
     return -1;
   }
   /* printf("res = %d\n", readpos[fd]); */
   return readpos[fd];
+}
+
+EXTERN_C int file_size(int fd)
+{
+  int res;
+  /* printf("file_size(%d)\n", fd); */
+  if(fd<0 || fd>MAXFD || readpos[fd]<0)
+    return -1;
+  res = docmd(8, &fd, sizeof(fd));
+  /* printf("res = %d\n", res); */
+  return res;
 }
 
 static DIR g_dir;
