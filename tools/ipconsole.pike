@@ -1,4 +1,4 @@
-#!/bin/env pike
+#!/usr/bin/env pike
 
 mapping(int:string) bottled_answer = ([]);
 array(int) bottle_queue = ({});
@@ -77,7 +77,8 @@ string process_command(int ser, int cmd, string data)
     fd = generate_fd();
     array dir;
     if(dir = get_dir(fixfn(data))) {
-      fds[fd] = ({ fixfn(data) }) + dir;
+      fds[fd] = ({ fixfn(data) }) + dir; //Array.map(dir, upper_case);
+      //werror("Dir: %O\n", Array.map(dir, upper_case));
       return bottle_answer(ser, fd);
     } else
       return bottle_answer(ser, -2);
