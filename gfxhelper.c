@@ -2,6 +2,7 @@
 #include "cdfs.h"
 #include "report.h"
 #include "gfxhelper.h"
+#include "matrix.h"
 
 /* FIXME: There is a little bit to much redundancy going on between
    the diffrent texture pasting functions. Macros might be good. */
@@ -143,28 +144,23 @@ void paste_pvr( struct pvr *i, int x, int y, int flags)
   myvertex.cmd = TA_CMD_VERTEX;
   myvertex.colour = 0;
   myvertex.ocolour = 0;
-  myvertex.z = 0.25;
 
   myvertex.x = xf;
   myvertex.y = yf;
   myvertex.u = 0.0;
   myvertex.v = 0.0;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, yf, 0.0);
 
-  myvertex.x = w+xf;
   myvertex.u = w/(8<<((i->polymode2>>3)&7));
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, w+xf, yf, 0.0);
 
-  myvertex.x = xf;
-  myvertex.y = h+yf;
   myvertex.u = 0.0;
   myvertex.v = h/(8<<(i->polymode2&7));
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, h+yf, 0.0);
 
-  myvertex.x = w+xf;
   myvertex.u = w/(8<<((i->polymode2>>3)&7));
   myvertex.cmd |= TA_CMD_VERTEX_EOS;
-  ta_commit_list(&myvertex);  
+  ta_commit_vertex(&myvertex, w+xf, h+yf, 0.0);  
 }
 
 /* Paste untransparent PVR */
@@ -194,28 +190,22 @@ void paste_image( struct pvr *i, int x, int y, int flags)
   myvertex.cmd = TA_CMD_VERTEX;
   myvertex.colour = 0;
   myvertex.ocolour = 0;
-  myvertex.z = 0.5;
 
-  myvertex.x = xf;
-  myvertex.y = yf;
   myvertex.u = 0.0;
   myvertex.v = 0.0;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, yf, 0.0);
 
-  myvertex.x = w+xf;
   myvertex.u = w*(1.0/1024);
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, w+xf, yf, 0.0);
 
-  myvertex.x = xf;
-  myvertex.y = h+yf;
   myvertex.u = 0.0;
   myvertex.v = h*(1.0/1024);
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, h+yf, 0.0);
 
   myvertex.x = w+xf;
   myvertex.u = w*(1.0/1024);
   myvertex.cmd |= TA_CMD_VERTEX_EOS;
-  ta_commit_list(&myvertex);  
+  ta_commit_vertex(&myvertex, w+xf, h+yf, 0.0);
 }
 
 /*! @decl void paste_pvr_part( struct pvr *, int x, int y,
@@ -297,26 +287,20 @@ void paste_pvr_part( struct pvr *i, int x, int y,
   ufoo = 1.0/(8<<((i->polymode2>>3)&7));
   vfoo = 1.0/(8<<(i->polymode2&7));
 
-  myvertex.x = xf;
-  myvertex.y = yf;
   myvertex.u = tx1f*ufoo;
   myvertex.v = ty2f*vfoo;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, yf, 0.0);
 
-  myvertex.x = w+xf;
   myvertex.u = tx2f*ufoo;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, w+xf, yf, 0.0);
 
-  myvertex.x = xf;
-  myvertex.y = h+yf;
   myvertex.u = tx1f*ufoo;
   myvertex.v = ty1f*vfoo;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, h+yf, 0.0);
 
-  myvertex.x = w+xf;
   myvertex.u = tx2f*ufoo;
   myvertex.cmd |= TA_CMD_VERTEX_EOS;
-  ta_commit_list(&myvertex);  
+  ta_commit_vertex(&myvertex, w+xf, h+yf, 0.0);
 }
 
 /*! @decl void paste_pvr_scale_a( 
@@ -377,28 +361,21 @@ void paste_pvr_scale( struct pvr *i, int x, int y, int x2, int y2, int flags)
   myvertex.cmd = TA_CMD_VERTEX;
   myvertex.colour = 0;
   myvertex.ocolour = 0;
-  myvertex.z = 0.25;
 
-  myvertex.x = xf;
-  myvertex.y = yf;
   myvertex.u = 0.0;
   myvertex.v = 0.0;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, yf, 0.0);
 
-  myvertex.x = xf2;
   myvertex.u = w/(8<<((i->polymode2>>3)&7));
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf2, yf, 0.0);
 
-  myvertex.x = xf;
-  myvertex.y = yf2;
   myvertex.u = 0.0;
   myvertex.v = h/(8<<(i->polymode2&7));
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, yf2, 0.0);
 
-  myvertex.x = xf2;
   myvertex.u = w/(8<<((i->polymode2>>3)&7));
   myvertex.cmd |= TA_CMD_VERTEX_EOS;
-  ta_commit_list(&myvertex);  
+  ta_commit_vertex(&myvertex, xf2, yf2, 0.0);  
 }
 
 /*! @decl void paste_pvr_scale_a( 
@@ -464,28 +441,21 @@ void paste_pvr_scale_a( struct pvr *i, int x, int y, int x2, int y2,
   myvertex.cmd = TA_CMD_VERTEX;
   myvertex.colour = 0x3f800000; //0x80ff0000; //Multi with color
   myvertex.ocolour = 0; //Added to color
-  myvertex.z = 0.25;
 
-  myvertex.x = xf;
-  myvertex.y = yf;
   myvertex.u = 0.0;
   myvertex.v = 0.0;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, yf, 0.0);
 
-  myvertex.x = xf2;
   myvertex.u = w/(8<<((i->polymode2>>3)&7));
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf2, yf, 0.0);
 
-  myvertex.x = xf;
-  myvertex.y = yf2;
   myvertex.u = 0.0;
   myvertex.v = h/(8<<(i->polymode2&7));
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, xf, yf2, 0.0);
 
-  myvertex.x = xf2;
   myvertex.u = w/(8<<((i->polymode2>>3)&7));
   myvertex.cmd |= TA_CMD_VERTEX_EOS;
-  ta_commit_list(&myvertex);  
+  ta_commit_vertex(&myvertex, xf2, yf2, 0.0);  
 }
 
 /*! @decl void commit_dummy_transpoly()

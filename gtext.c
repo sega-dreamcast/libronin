@@ -6,6 +6,7 @@
 #include "ta.h"
 #include "misc.h"
 #include "gtext.h"
+#include "matrix.h"
 
 
 /* setup a table for easy twiddling of texures.
@@ -179,7 +180,6 @@ void draw_text(int x, int y, int w, unsigned char *text, struct font *font, int 
   ta_commit_list(&mypoly);  
   myvertex.colour = color;
   myvertex.ocolour = 0;
-  myvertex.z = 0.125;
 
   while((c=*text++)) {
     int u = font->x[c], v = font->y[c], cw = font->w[c];
@@ -191,26 +191,20 @@ void draw_text(int x, int y, int w, unsigned char *text, struct font *font, int 
 	cw = w;
 
       myvertex.cmd = TA_CMD_VERTEX;
-      myvertex.x = x;
-      myvertex.y = y;
       myvertex.u = u*scale;
       myvertex.v = v*scale;
-      ta_commit_list(&myvertex);
+      ta_commit_vertex(&myvertex, x, y, 0.0);
 
-      myvertex.x = x+cw;
       myvertex.u = (u+cw)*scale;
-      ta_commit_list(&myvertex);
+      ta_commit_vertex(&myvertex, x+cw, y, 0.0);
 
-      myvertex.x = x;
-      myvertex.y = y+24;
       myvertex.u = u*scale;
       myvertex.v = (v+24)*scale;
-      ta_commit_list(&myvertex);
+      ta_commit_vertex(&myvertex, x, y+24, 0.0);
 
-      myvertex.x = x+cw;
       myvertex.u = (u+cw)*scale;
       myvertex.cmd |= TA_CMD_VERTEX_EOS;
-      ta_commit_list(&myvertex);  
+      ta_commit_vertex(&myvertex, x+cw, y+24, 0.0);  
     }
 
     cw += (c==' '? 5:2);
@@ -301,24 +295,18 @@ void display_font(struct font *font)
   myvertex.z = 0.125;
 
   myvertex.cmd = TA_CMD_VERTEX;
-  myvertex.x = 0;
-  myvertex.y = 0;
   myvertex.u = 0.0;
   myvertex.v = 0.0;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, 0, 0, 0.0);
   
-  myvertex.x = 640;
   myvertex.u = 1.0;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, 640, 0, 0.0);
   
-  myvertex.x = 0;
-  myvertex.y = 480;
   myvertex.u = 0.0;
   myvertex.v = 1.0;
-  ta_commit_list(&myvertex);
+  ta_commit_vertex(&myvertex, 0, 480, 0.0);
   
-  myvertex.x = 640;
   myvertex.u = 1.0;
   myvertex.cmd |= TA_CMD_VERTEX_EOS;
-  ta_commit_list(&myvertex);  
+  ta_commit_vertex(&myvertex, 640, 480, 0.0);  
 }
