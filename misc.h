@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-void show_file_error();
+void show_file_error(struct font *font);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
