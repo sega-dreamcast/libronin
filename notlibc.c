@@ -49,15 +49,15 @@ void exit(int rcode)
 }
 
 /* 8c 000000  notused         64Kb - vectors
- * 8c 010000  binary start    2.4 Mb
+ * 8c 010000  binary start    2.9 Mb
  *
  * 8c 280000  malloc start    
- * 8c efffff  malloc end     12.5 Mb
+ * 8c efffff  malloc end       12 Mb
  *
  * 8c f00000  stack end       
  * 8c fffffc  stack start     1 Mb
  */
-#define MEMSTART 0x8c280000
+#define MEMSTART 0x8c300000
 #define MEMEND   0x8cf00000
 
 static int last;
