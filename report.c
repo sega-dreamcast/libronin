@@ -28,6 +28,8 @@ void report(const char *str)
 {
 #ifndef NOSERIAL
   serial_puts(str); 
+  serial_flush();
+  usleep(1000); //FIXME: Make serial_flush sleep depending on bps set instead.
 #endif
 }
 
@@ -84,5 +86,6 @@ void reportf(const char *fmt, ...)
       serial_putc(p);
   va_end(va);
   serial_flush();
+  usleep(1000);
 #endif /* SERIAL */
 }
