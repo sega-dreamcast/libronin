@@ -208,6 +208,7 @@ unsigned char *translate_from_iso( unsigned char *t, int *_l )
   for( i = 0; i<l; i++ )
     switch( t[i] )
     {
+      case 0x0d: break;
       case 0x1b:
 	if(t[i+1]=='(' && (t[i+2]=='I' || t[i+2]=='B')) {
 	  jisx0201 = (t[i+2]=='I');
