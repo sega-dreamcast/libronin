@@ -1,3 +1,4 @@
+#ifdef REALMALLOC
 /*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain.  Use, modify, and
@@ -5398,3 +5399,4 @@ History:
          structure of old version,  but most details differ.)
 
 */
+#endif /* REALMALLOC */
