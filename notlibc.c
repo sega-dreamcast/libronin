@@ -72,9 +72,15 @@ int isatty (int fd) { return fd>=0 && fd<=2; }
 
 
 /* Real implementations of functions normally found in libc */
+
+/*! @decl void exit(int rcode)
+ *!
+ *! @[rcode] is ignored.
+ */
 void exit(int rcode)
 {
   report("Exit called. Exiting to menu.\n");
+  /* -3:Slave, -1:Reset, 0|1:Menu */
   (*(void(**)())0x8c0000e0)(1);
   for(;;);
 }
