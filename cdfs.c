@@ -523,8 +523,8 @@ int chdir(const char *path)
   int fd = open(path, O_DIR|O_RDONLY);
   if(fd<0)
     return fd;
-  cwd_sec = fh[fd].sec0;
-  cwd_len = fh[fd].len;
+  cwd_sec = fh[fd-MIN_FD].sec0;
+  cwd_len = fh[fd-MIN_FD].len;
   close(fd);
   return 0;
 }
