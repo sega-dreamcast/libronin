@@ -1,5 +1,6 @@
 #include "video.h"
 #include "ta.h"
+#include "report.h"
 
 /* Initialize the PVR subsystem to a known state */
 
