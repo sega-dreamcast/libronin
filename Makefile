@@ -22,7 +22,7 @@ CFLAGS=$(CCFLAGS)
 
 # TYPE can be elf or srec
 TYPE     = elf
-OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o
+OBJECTS  = serial.o report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
 	   examples/ex_video.$(TYPE)
@@ -51,10 +51,10 @@ arm_sound_code.bin: arm_sound_code.elf
 	arm-elf-objcopy -O binary $< $@
 
 arm_sound_code.elf: arm_startup.o arm_sound_code.o
-	arm-elf-gcc -mcpu=arm7 -ffreestanding -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc
+	arm-elf-gcc -mcpu=arm7 -ffreestanding -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -Llibmad -lmad -lgcc
 
 arm_sound_code.o: arm_sound_code.c soundcommon.h
-	arm-elf-gcc -c -mcpu=arm7 -ffreestanding -O4 -fomit-frame-pointer -o $@ $<
+	arm-elf-gcc -c -I libmad -ffast-math -DMPEGMUSIC -mcpu=arm7 -ffreestanding -O4 -fomit-frame-pointer -o $@ $<
 
 arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
