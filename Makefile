@@ -85,6 +85,7 @@ clean: cleanish
 
 examples: libronin.a $(EXAMPLES)
 
+ifeq "$(NETSERIAL)$(NETCD)" "00"
 DISTHEADERS=cdfs.h common.h dc_time.h gddrive.h gfxhelper.h gtext.h maple.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h
 dist: clean all crt0.o $(DISTHEADERS)
 	@mkdir disttmp && mkdir disttmp/ronin && \
@@ -97,6 +98,10 @@ dist: clean all crt0.o $(DISTHEADERS)
 	(cd disttmp && tar cvf - ronin) | gzip -c > ronin-dist.tar.gz && \
 	echo "remember to tag and bump version if you didn't already." && \
 	rm -rf disttmp
+else
+dist:
+	@echo "You must disable NET!"
+endif
 
 #RIS specific upload targets
 test-vmufs: examples/ex_vmsfscheck.$(TYPE)
