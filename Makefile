@@ -84,6 +84,18 @@ clean: cleanish
 
 examples: libronin.a $(EXAMPLES)
 
+DISTHEADERS=maple.h misc.h notlibc.h report.h ronin.h serial.h sincos_rroot.h soundcommon.h sound.h ta.h translate.h video.h vmsfs.h
+dist: clean all crt0.o $(DISTHEADERS)
+	ls ronin-dist.tar.gz || \
+	mkdir disttmp && mkdir disttmp/ronin && \
+	cp libronin.a disttmp/ronin && \
+	cp libronin-noserial.a disttmp/ronin && \
+	cp $(DISTHEADERS) disttmp/ronin && \
+	cp README disttmp/ronin && \
+	cp COPYING disttmp/ronin && \
+	(cd disttmp && tar cvf - ronin) | gzip -c > ronin-dist.tar.gz && \
+	echo "remember to tag and bump version if you didn't already." && \
+	rm -rf disttmp
 
 #RIS specific upload targets
 test-vmufs: examples/ex_vmsfscheck.$(TYPE)
