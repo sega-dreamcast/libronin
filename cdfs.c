@@ -14,11 +14,7 @@
 
 #define NUM_BUFFERS   8
 
-struct TOC {
-  unsigned int entry[99];
-  unsigned int first, last;
-  unsigned int dunno;
-};
+static struct TOC *current_toc = NULL;
 
 #define TOC_LBA(n) ((n)&0x00ffffff)
 #define TOC_ADR(n) (((n)&0x0f000000)>>24)
@@ -74,6 +70,7 @@ static int gdfs_errno_to_errno(int n)
      return ERR_NODISK;
    case 6:
      drive_inited = -1;
+     current_toc = NULL;
      return ERR_DISKCHG;
    default:
      return ERR_SYSERR;
@@ -272,6 +269,7 @@ static int find_root(unsigned int *psec, unsigned int *plen)
     return r;
   if((r=read_toc(&toc, 0))!=0)
     return r;
+  current_toc = &toc;
   if(!(sec = find_datatrack(&toc)))
     return ERR_DIRERR;
   if((r=read_sectors((char *)sector_buffer[0], sec+16, 1))!=0)
@@ -583,4 +581,10 @@ void cdfs_init()
 void cdfs_reinit()
 {
   drive_inited = -1;
+  current_toc = NULL;
+}
+
+struct TOC *cdfs_gettoc()
+{
+  return current_toc;
 }

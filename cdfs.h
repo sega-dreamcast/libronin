@@ -5,6 +5,17 @@
  */
 #include "common.h"
 
+struct TOC {
+  unsigned int entry[99];
+  unsigned int first, last;
+  unsigned int dunno;
+};
+
+#define TOC_LBA(n) ((n)&0x00ffffff)
+#define TOC_ADR(n) (((n)&0x0f000000)>>24)
+#define TOC_CTRL(n) (((n)&0xf0000000)>>28)
+#define TOC_TRACK(n) (((n)&0x00ff0000)>>16)
+
 typedef struct {
   int     dd_fd;
   int     dd_loc;
@@ -44,6 +55,8 @@ void cdfs_reinit(void);
 int play_cdda_tracks(int start, int stop, int reps);
 int play_cdda_sectors(int start, int stop, int reps);
 int stop_cdda(void);
+
+struct TOC *cdfs_gettoc(void);
 END_EXTERN_C
 
 #endif //_CDFS_H
