@@ -17,9 +17,9 @@ TYPE = elf
 EXTRALIBS += -lm
 CRT0=lib/crt0.o
 ifeq "$(TYPE)" "bin"
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Llib -lz -lronin-noserial -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Llib -lz -lronin-noserial -lgcc -lc -lgcc
 else
-LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Llib -lz -lronin -lgcc -lc
+LINK=$(CPUFLAGS) -nostartfiles -nostdlib $(INCLUDES) -o $@ -Llib -lz -lronin -lgcc -lc -lgcc
 endif
 
 EXAMPLEFLAGS = -DVMUCOMPRESS
