@@ -82,6 +82,7 @@ libz.a:
 	@echo Making convenience links.
 	-ln -s zlib/libz.a .
 	-ln -s zlib/zlib.h .
+	-ln -s zlib/zconf.h .
 
 cleanish:
 	rm -f $(OBJECTS) $(EXAMPLES) \
@@ -113,6 +114,7 @@ dist: $(DISTHEADERS)
 		cp zlib/README disttmp/ronin/ZLIB_README && \
 		cp zlib/libz.a disttmp/ronin && \
 		cp zlib/zlib.h disttmp/ronin && \
+		cp zlib/zconf.h disttmp/ronin && \
 		(cd disttmp && tar cvf - ronin) | gzip -c > ronin-dist.tar.gz && \
 		echo "remember to tag and bump version if you didn't already." && \
 		rm -rf disttmp; \
