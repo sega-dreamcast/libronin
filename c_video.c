@@ -326,8 +326,6 @@ static void pvr_check_tvsys()
 {
   fb_devconfig.dc_tvsystem = (*(__volatile unsigned char *)0xa021a004) & 3;
   
-  reportf("Display type: %d\n", fb_devconfig.dc_tvsystem);
-
   switch(fb_devconfig.dc_tvsystem) {
    case 1: // PAL
      fb_devconfig.dc_hz50 = 1; break;

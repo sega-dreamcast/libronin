@@ -20,7 +20,7 @@ static void low_send_oob(char *ptr, int l)
 
 void serial_init(int baudrate)
 {
-  unsigned int my_ip = 0x052aa8c0;
+  unsigned int my_ip = 184658112 - 256 - (11-4);
   pci_setup();
   ether_setup();
   ip_set_my_ip(&my_ip);

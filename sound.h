@@ -3,6 +3,8 @@
  */
 #include "common.h"
 #define DC_SOUND_BS 9216
+//#define DC_SOUND_BS 524288
+//#define DC_SOUND_BS 6144
 
 struct buffer
 {
