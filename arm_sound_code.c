@@ -10,6 +10,8 @@
 
 #define SOUNDSTATUS ((volatile struct soundstatus *)(void *)(SOUNDSTATUS_ADDR))
 
+#define EXPANSION ((void (*)(int , void (*)(int) ))(void*)EXPANSION_BASE_ADDR)
+
 static void __gccmain() { }
 
 static int freq_exp = 0;
@@ -142,7 +144,10 @@ int main()
 
     if(SOUNDSTATUS->cmdstatus==1) {
       /*      SOUNDSTATUS[n++] = *SOUNDSTATUS; */
-      do_command(SOUNDSTATUS->cmd);
+      if(SOUNDSTATUS->cmd < 0)
+	EXPANSION(~SOUNDSTATUS->cmd, do_command);
+      else
+	do_command(SOUNDSTATUS->cmd);
       SOUNDSTATUS->cmdstatus = 2;
       /*
       SOUNDSTATUS[n++] = *SOUNDSTATUS;

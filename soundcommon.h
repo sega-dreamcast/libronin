@@ -20,6 +20,8 @@ struct soundstatus {
 #define SOUNDSTATUS_ADDR (0xff80)
 #define RING_BASE_ADDR (0x10000)
 
+#define EXPANSION_BASE_ADDR (0x40000)
+
 #define MODE_PAUSE 0
 #define MODE_PLAY  1
 
@@ -31,6 +33,8 @@ struct soundstatus {
 
 #define CMD_SET_FREQ(n) (0x50|(n))
 #define CMD_SET_BUFFER(n) (0x60|(n))
+
+#define CMD_EXPANSION(n) (~(n))
 
 
 /* This gives 11025 Hz */

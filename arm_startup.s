@@ -1,7 +1,7 @@
 #
 # Generic startup and interrupt handler for ARM7 CPU.
 #
-# Note:	Stack is allocated at 0xf000, keep the binary short.  :-)
+# Note:	Stack is allocated at 0x3ff00, keep the binary short.  :-)
 #
 	
 	.globl	_start
@@ -57,7 +57,7 @@ done:	b	done
 
 
 stack_base:	
-	.long 0x6fff0
+	.long 0x3ff00
 	
 	.end
 
