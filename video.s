@@ -216,7 +216,7 @@ _dc_check_cable:
 	mov.l	r1,@r0
 	! read PORT8 and PORT9
 	mov.w	@(4,r0),r0
-	shlr8	r0,r0
+	shlr8	r0
 	rts
 	and	#3,r0
 
