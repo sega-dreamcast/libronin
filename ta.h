@@ -132,6 +132,7 @@ struct modifier_list {
 #define TA_POLYMODE2_TEXTURE_REPLACE  (0<<6)
 #define TA_POLYMODE2_TEXTURE_MODULATE (1<<6)
 #define TA_POLYMODE2_TEXTURE_DECAL    (2<<6)
+#define TA_POLYMODE2_TEXTURE_MODULATE_ALPHA (3<<6)
 #define TA_POLYMODE2_U_SIZE_8         (0<<3)
 #define TA_POLYMODE2_U_SIZE_16        (1<<3)
 #define TA_POLYMODE2_U_SIZE_32        (2<<3)
