@@ -273,12 +273,12 @@ int vmsfs_check_unit(int unit, int part, struct vmsinfo *info)
       info->icon_shape = minfo->icon_shape;
       info->num_blocks = minfo->num_blocks;
 
-      /* FIXME?  Can't handle cards with fat size != 1 */
+      /* FIXME?  Can't handle cards with fat larger than 8K */
 #ifndef NOSERIAL
-      if(info->fat_size != 1)
-        reportf("Unhandled fat_size: %d\n", info->fat_size);
+      if(info->fat_size * info->blocksz > 8192)
+        reportf("Unhandled fat_size: %d\n", info->fat_size * info->blocksz);
 #endif
-      return info->fat_size == 1;
+      return info->fat_size>0 && info->fat_size * info->blocksz <= 8192;
 
     } else {
       report("E1 ");
@@ -457,8 +457,9 @@ int vmsfs_get_superblock(struct vmsinfo *info, struct superblock *s)
       vmsfs_errno = VMSFS_EFORMAT;
       return 0;
     }
-  if(!vmsfs_read_block(info, info->fat_loc, s->fat))
-    return 0;
+  for(i=0; i<info->fat_size; i++)
+    if(!vmsfs_read_block(info, info->fat_loc+i, s->fat+i*info->blocksz))
+      return 0;
   s->root_modified=0;
   s->fat_modified=0;
   return 1;
@@ -466,9 +467,11 @@ int vmsfs_get_superblock(struct vmsinfo *info, struct superblock *s)
 
 int vmsfs_sync_superblock(struct superblock *s)
 {
-  if(s->fat_modified &&
-     !vmsfs_write_block(s->info, s->info->fat_loc, s->fat))
-    return 0;
+  int i;
+  if(s->fat_modified)
+    for(i=0; i<s->info->fat_size; i++)
+      if(!vmsfs_write_block(s->info, s->info->fat_loc+i, s->fat+i*s->info->blocksz))
+	return 0;
     /* write_block has alread set ous_want, and that error is probably
        more interesting. (was VMSFS_SYNCFAT) */
 
@@ -487,14 +490,14 @@ int vmsfs_sync_superblock(struct superblock *s)
 unsigned int vmsfs_get_fat(struct superblock *s, unsigned int n)
 {
   n<<=1;
-  if(n>=s->info->blocksz) return 0xfffc;
+  if(n>=(unsigned)s->info->fat_size*s->info->blocksz) return 0xfffc;
   return s->fat[n]|(s->fat[n+1]<<8);
 }
 
 void vmsfs_set_fat(struct superblock *s, unsigned int n, unsigned int l)
 {
   n<<=1;
-  if(n>=s->info->blocksz) return;
+  if(n>=(unsigned)s->info->fat_size*s->info->blocksz) return;
   s->fat[n]=l&0xff;
   s->fat[n+1]=(l>>8)&0xff;
   s->fat_modified = 1;
