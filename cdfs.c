@@ -1,4 +1,5 @@
 #include <string.h> //FIXME: External dependecy.
+#include <ctype.h>
 #include "cdfs.h"
 #include "gddrive.h"
 #include "dc_time.h"
@@ -67,6 +68,8 @@ static int gdfs_errno_to_errno(int n)
 {
  switch(n) {
    case 2:
+     drive_inited = -1;
+     current_toc = NULL;
      return ERR_NODISK;
    case 6:
      drive_inited = -1;
@@ -168,7 +171,7 @@ static int read_cached_sector(unsigned char **buf, int sec)
 {
   int i;
   static int robin = 1;
-  if(drive_inited && sec)
+  if(drive_inited>0 && sec)
     for(i=1; i<NUM_BUFFERS; i++)
       if(secbuf_secs[i] == sec) {
 	*buf = (unsigned char *)sector_buffer[i];
@@ -326,7 +329,7 @@ int open(const char *path, int oflag, ...)
       break;
   if(fd>=MAX_OPEN_FILES)
     return ERR_NUMFILES;
-  if(drive_inited && cwd_sec > 0 && *path!='/') {
+  if(drive_inited>0 && cwd_sec > 0 && *path!='/') {
     sec = cwd_sec;
     len = cwd_len;
   } else
