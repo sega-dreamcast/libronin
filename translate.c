@@ -50,7 +50,7 @@ int set_previous_language( )
 
 char *language_name( int id )
 {
-  if( id < next_language )
+  if( id >= 0 && id < next_language )
     return languages[ id ].name;
   return NULL;
 }
@@ -128,7 +128,7 @@ unsigned char *___translate( char *what, int language )
   int tid;
   char *r;
 
-  if( language == 0 )
+  if( language < 1 || language >= next_language )
     return what;
 
   tid = translation_id( what, 1 );
