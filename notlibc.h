@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include "common.h"
 START_EXTERN_C
+
+
 void exit(int rcode) /*__THROW*/ __attribute__ ((__noreturn__));
 void free(void *ptr);
 int __offtime(const long int *t, long int offset, struct tm *tp);
@@ -21,7 +23,7 @@ void free(void *ptr);
 void *realloc(void *ptr, size_t size);
 void *memalign(size_t alignment, size_t size);
 void *valloc(size_t size);
-void mallinfo(void);
+struct mallinfo mallinfo(void);
 int mallopt(int cmd, int value);
 
 /* 
