@@ -46,6 +46,9 @@ clean:
 examples: $(EXAMPLES)
 
 
+#RIS specific upload targets
+test-vmufs: examples/ex_vmsfscheck.$(TYPE)
+	/home/peter/hack/dreamsnes/dc/ipupload.pike < examples/ex_vmsfscheck.$(TYPE)
 
 
 #ARM sound code

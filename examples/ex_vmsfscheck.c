@@ -10,6 +10,7 @@
 #include "notlibc.h"
 
 #define SRAMSIZE 8192
+
 static unsigned char icondata[] = {
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -63,14 +64,17 @@ static unsigned short palette[] = { /* ARGB4 */
  0xfacc, 0xfddc, 0xf8ac, 0xf68c, 0xf02c, 0xf46c, 0xf688, 0xfa88, 
  0xf864, 0xfea8, 0xf224, 0xf004, 0xffff, 0xffff, 0xffff, 0xffff,
 };
-static char sram_filename[13];
-static int sram_save_unit = -1; //Normally -1
+
+static int sram_save_unit = -1;
 static struct vmsinfo info;
 static struct superblock super;
 static struct vms_file file;
 static struct vms_file_header header;
 static struct timestamp tstamp;
 static struct tm tm;
+
+unsigned char *SRAM;
+unsigned char *RESTOREDRAM;
 
 void write_sram( unsigned char *data, int size )
 {
@@ -108,7 +112,7 @@ void write_sram( unsigned char *data, int size )
 
   memset(&header, 0, sizeof(header));
   strncpy(header.shortdesc, "libronin test", 16);
-  strncpy(header.longdesc, "Feel free to delete this file", 32);
+  strncpy(header.longdesc, "Delete this file", 32);
   strncpy(header.id, "vmsfscheck", 16);
   header.numicons = 1;
   memcpy(header.palette, palette, sizeof(header.palette));
@@ -122,13 +126,13 @@ void write_sram( unsigned char *data, int size )
   tstamp.second = tm.tm_sec;
   tstamp.wkday = (tm.tm_wday+6)%7;
   vmsfs_beep(&info, 1);
+
   if(!vmsfs_create_file(&super, "vmsfschk.tmp", &header, icondata, NULL,
 			data, size, &tstamp))
     report("Failed to write SRAM to VMS!\n");
   vmsfs_beep(&info, 0);
 }
 
-unsigned char *RESTOREDRAM;
 void restore_sram( )
 {
   char *point;
@@ -137,17 +141,6 @@ void restore_sram( )
 
   memset( RESTOREDRAM, 0xaa, SRAMSIZE );
 
-  /*
-  strncpy(sram_filename, rom_filename, 12);
-  sram_filename[12] = 0;
-  if((point = strchr(sram_filename, '.')))
-    *point = 0;
-  i = strlen(sram_filename);
-  while(i<8)
-    sram_filename[i++] = '_';
-  strcpy(sram_filename+8, "_SRM");
-  */
-
   sram_save_unit = -1;
 
   for(i=0; i<24; i++)
@@ -155,12 +148,24 @@ void restore_sram( )
       cards |= 1<<i;
       sram_save_unit = i;
       reportf("Save unit is %d\n", i);
-      if(!vmsfs_open_file(&super, sram_filename, &file))
+      if(!vmsfs_open_file(&super, "vmsfschk.tmp", &file)) {
+        report("No vmsfschk.tmp found on this unit.\n");
 	continue;
-      if(strncmp(file.header.id, "vmsfscheck", 16) 
-         || strncmp(file.header.longdesc, "Feel free to delete this file", 32)
+      }
+      if(strncmp(file.header.id, "vmsfscheck", 16) != 0)
+        reportf("Incorrect id '%s'.\n", file.header.id);        
+      if(strncmp(file.header.longdesc, "Delete this file", 32) != 0)
+        reportf("Incorrect longdesc '%s'.\n", file.header.longdesc);
+      if(file.size > 0x10000)
+        reportf("File to big '%d'.\n", file.size);
+        
+      if(strncmp(file.header.id, "vmsfscheck", 16) != 0
+         || strncmp(file.header.longdesc, 
+                    "Delete this file", 32) != 0
          || file.size > 0x10000)
 	continue;
+
+      reportf("File size is %d\n", file.size);
 
       if(vmsfs_read_file(&file, RESTOREDRAM, file.size)) {
         sram_save_unit = i;
@@ -168,10 +173,8 @@ void restore_sram( )
 	break;
       }
     }
-  //  memcpy(sram_cp, RESTOREDRAM, file.size);
 }
 
-unsigned char *SRAM;
 int main(int argc, char **argv)
 {
   int i,x;
@@ -180,23 +183,34 @@ int main(int argc, char **argv)
   usleep(5);
   report("Test starting\n");
 
+  maple_init();
+  report("Maple BUS initiated.\n");
+
   SRAM = malloc(SRAMSIZE);
   RESTOREDRAM = malloc(SRAMSIZE);
-  //  for(i=0; i<256; i?i=i*2:i++) {
-    i=0;
-    reportf("Saving 4KiB %d's\n", i);
-    memset(&SRAM, i, sizeof(SRAM));
-    write_sram( SRAM, SRAMSIZE );
-    report("Saved.\n");
-    restore_sram();
-    for(x=0; x<SRAMSIZE; x++)
-      if(RESTOREDRAM[x] != i) {
-        report("\nVerification failed!\n");
+  for(i=0; i<256; i?i=i<<1:i++) {
+    reportf("\nSaving %dB %d's ...\n", SRAMSIZE, i);
+    memset(SRAM, i, SRAMSIZE);
+    for(x=0; x<SRAMSIZE; x++) {
+      if(SRAM[x] != i) {
+        reportf("\nVerification of original failed at count %d!\n", x);
         break;
       }
-  //  }
-  free(SRAM);
-  free(RESTOREDRAM);
+    }
+    write_sram( SRAM, SRAMSIZE );
+
+    report("Saved. Restoring ...\n");
+    restore_sram();
+    report("\nRestored.\n");
+    for(x=0; x<SRAMSIZE; x++) {
+      if(RESTOREDRAM[x] != i) {
+        reportf("\nVerification failed at count %d!\n", x);
+        break;
+      }
+    }
+  }
+  //  free(SRAM);
+  //  free(RESTOREDRAM);
 
   return 0;
 }
