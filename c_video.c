@@ -412,8 +412,14 @@ void dc_reset_screen( int hires, int lace )
       dispvar.mode2 |= TA_POLYMODE2_BILINEAR_FILTER;
   } else {
     dispvar.center = 1;
-    if(!lace)
-      dispvar.scnbot/=2;
+    if(!lace) {
+      /* No need to run "noninterlace" on VGA, it just
+	 makes the overlays more ugly... */
+      if(cable == 0)
+	lace = 1;
+      else
+	dispvar.scnbot/=2;
+    }
     hires = 1;
   }
 
