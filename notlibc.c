@@ -7,6 +7,7 @@
 #include "common.h"
 #include "dc_time.h"
 #include "notlibc.h"
+#include "report.h"
 
 int errno = 0;
 

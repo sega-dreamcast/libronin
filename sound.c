@@ -1,5 +1,6 @@
 #include "soundcommon.h"
 #include "sound.h"
+#include "report.h"
 
 struct buffer buff;
 #include "arm_sound_code.h"

@@ -1,7 +1,9 @@
 /* Output to the serial slave. Mainly used for debuggging. */
 
 #include <stdarg.h>
+#include "serial.h"
 #include "report.h"
+#include "dc_time.h"
 
 //! Returns the int @[x] converted to a string.
 //FIXME: Move it to some string lib or something instead.

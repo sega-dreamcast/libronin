@@ -1,4 +1,5 @@
 #include <ronin.h>
+#include "report.h"
 
 struct sysinfo {
   unsigned char id[8];
