@@ -1,9 +1,9 @@
 /* This is not an example per see. It's a test of malloc(3) and free(3) */
 
-#include <stdlib.h>
 #include "serial.h"
 #include "report.h"
 #include "dc_time.h"
+#include "notlibc.h"
 
 int main(int argc, char **argv)
 {
