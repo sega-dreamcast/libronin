@@ -15,7 +15,7 @@ void exit(int rcode) /*__THROW*/ __attribute__ ((__noreturn__));
 void free(void *ptr);
 int __offtime(const long int *t, long int offset, struct tm *tp);
 int brk( void *ebdds );
-void *sbrk( size_t incr );
+void *sbrk( ptrdiff_t incr );
 /*  Standard (ANSI/SVID/...)  functions: */
 void *malloc(size_t size);
 void *calloc(size_t nelem, size_t elsize);

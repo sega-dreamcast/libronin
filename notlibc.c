@@ -201,7 +201,7 @@ int access( const char *fname, int mode )
     return -1;
 }
 
-void *sbrk( size_t incr )
+void *sbrk( ptrdiff_t incr )
 {
   int prior_break = end_break;
   int newend_break = prior_break + incr;
