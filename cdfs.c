@@ -547,3 +547,8 @@ void cdfs_init()
 
   gdGdcInitSystem();
 }
+
+void cdfs_reinit()
+{
+  drive_inited = -1;
+}
