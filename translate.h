@@ -8,6 +8,7 @@ char *language_name( int id );
 int language_id( char *what );
 int set_language( int language );
 int set_next_language( );
+int set_previous_language( );
 extern int current_language;
 
 unsigned char *___translate( char *what, int language );

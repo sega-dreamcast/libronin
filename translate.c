@@ -28,7 +28,7 @@ static int next_language;
 int current_language;
 int set_language( int l )
 {
-  if( l >= next_language )
+  if( l >= next_language || l < 0 )
     return 0;
   current_language = l;
   return 1;
@@ -38,6 +38,13 @@ int set_next_language( )
 {
   if( !set_language( current_language+1 ) )
     set_language( 0 );
+  return current_language;
+}
+
+int set_previous_language( )
+{
+  if( !set_language( current_language-1 ) )
+    set_language( next_language-1 );
   return current_language;
 }
 
