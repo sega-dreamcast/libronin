@@ -7,6 +7,7 @@
 //#include <stddef.h>   /* for size_t */
 //#include <stdlib.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include "common.h"
 #include "dc_time.h"
@@ -68,9 +69,17 @@ int _write ( int file, char *ptr, int len) {
 }
 int _close (int file) { return close(file); }
 caddr_t _sbrk (int incr) { return sbrk(incr); }
-int _open (const char *path, int flags) { return open(path, flags, 0); }
+int _open (const char *path, int flags, ...) { return open(path, flags, 0); }
 int _fstat (int file, struct stat *st) { st->st_mode = S_IFCHR; return 0; }
 int isatty (int fd) { return fd>=0 && fd<=2; }
+int _fcntl(int fildes, int cmd, ...)
+{
+  switch(cmd) {
+  case F_GETFL:
+    return (fildes==1 || fildes==2)? O_WRONLY : O_RDONLY;
+  }
+  return -1;
+}
 
 
 /* Real implementations of functions normally found in libc */
