@@ -144,7 +144,7 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
 
   volatile unsigned int *vbl = (volatile unsigned int *)(void *)0xa05f810c;
 
-  fb_devconfig.dc_stripes = tvmode;    
+  //  fb_devconfig.dc_stripes = tvmode;    
 
   while (!(*vbl & 0x01ff));
   while (*vbl & 0x01ff);
@@ -174,7 +174,7 @@ void dc_init_video(int cabletype, int mode, int tvmode, int res,
   lines = 240;			// Non-VGA screen has 240 display lines
   if(!(cabletype & CABLE_VGA))		// VGA
   {
-    if(res<HIGHRES && !tvmode) {
+    if(res<HIGHRES /*&& !tvmode*/) {
       mode+=2;
       laceoffset++;
     }
@@ -394,7 +394,7 @@ void dc_reset_screen( int hires, int lace )
     TA_POLYMODE2_U_SIZE_512|TA_POLYMODE2_V_SIZE_512;
 
   if(cable != 0)
-    tvmode = fb_devconfig.dc_stripes = 0;
+    tvmode = /*fb_devconfig.dc_stripes =*/ 0;
 
   if(lace)
     tvmode = 0;
