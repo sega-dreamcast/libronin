@@ -10,7 +10,7 @@ AR = sh-elf-ar
 #Must be O4 to handle long jumps correctly.
 OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-defer-pop -fforce-addr -fstrict-aliasing -funroll-loops -fdelete-null-pointer-checks -fno-exceptions
 CPUFLAGS = -ml  -m4-single-only
-INCLUDES = -I. -Izlib
+INCLUDES = -I. -Izlib -Ilwip/include -Ilwip/include/ipv4 -Ilwip/arch/dc/include
 
 # TYPE can be elf, srec or bin
 TYPE = elf
@@ -28,7 +28,29 @@ CCFLAGS = $(OPTIMISE) $(CPUFLAGS) $(EXAMPLEFLAGS) -I. -DDC -DDREAMCAST
 CFLAGS = $(CCFLAGS)
 
 
+# begin lwIP
 
+LWCOREOBJS=lwip/core/mem.o lwip/core/memp.o lwip/core/netif.o \
+	lwip/core/pbuf.o lwip/core/stats.o lwip/core/sys.o \
+        lwip/core/tcp.o lwip/core/tcp_input.o \
+        lwip/core/tcp_output.o lwip/core/udp.o 
+LWCORE4OBJS=lwip/core/ipv4/icmp.o lwip/core/ipv4/ip.o \
+	lwip/core/inet.o lwip/core/ipv4/ip_addr.o
+
+LWAPIOBJS=lwip/api/api_lib.o lwip/api/api_msg.o lwip/api/tcpip.o \
+	lwip/api/err.o lwip/api/sockets.o 
+
+LWNETIFOBJS=lwip/netif/loopif.o \
+	lwip/netif/tcpdump.o lwip/netif/arp.o
+
+LWARCHOBJS=lwip/arch/dc/sys_arch.o lwip/arch/dc/thread_switch.o \
+	lwip/arch/dc/netif/bbaif.o lwip/arch/dc/netif/rtk.o \
+	lwip/arch/dc/netif/gapspci.o
+
+LWIPOBJS=$(LWCOREOBJS) $(LWCORE4OBJS) $(LWAPIOBJS) $(LWNETIFOBJS) \
+	$(LWARCHOBJS) lwip_util.o
+
+# end lwIP
 
 OBJECTS  = report.o ta.o maple.o video.o c_video.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o matrix.o
 
@@ -43,10 +65,7 @@ else
 OBJECTS += cdfs.o
 endif
 
-ifeq "$(NETSERIAL)$(NETCD)" "00"
-else
-OBJECTS += net/pci.o net/ether.o net/arp.o net/ip.o net/udp.o
-endif
+OBJECTS += $(LWIPOBJS)
 
 OBJECTS += notlibc.o 
 EXAMPLES = examples/ex_serial.$(TYPE) \
