@@ -1,4 +1,5 @@
 NETSERIAL = 0
+NETCD = 0
 CCC = sh-elf-c++ -fno-rtti
 CC = sh-elf-gcc -Wall
 LD = sh-elf-ld -EL
@@ -26,12 +27,22 @@ CCFLAGS = $(OPTIMISE) $(CPUFLAGS) -I. -DDC
 CFLAGS = $(CCFLAGS)
 
 
-OBJECTS  = report.o ta.o maple.o video.o c_video.o cdfs.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o
+OBJECTS  = report.o ta.o maple.o video.o c_video.o vmsfs.o time.o display.o sound.o gddrive.o gtext.o translate.o misc.o gfxhelper.o malloc.o
 
 ifeq "$(NETSERIAL)" "1"
-OBJECTS += netserial.o net/pci.o net/ether.o net/arp.o net/ip.o net/udp.o
+OBJECTS += netserial.o
 else
 OBJECTS += serial.o
+endif
+ifeq "$(NETCD)" "1"
+OBJECTS += netcd.o
+else
+OBJSCTE += cdfs.o
+endif
+
+ifeq "$(NETSERIAL)$(NETCD)" "00"
+else
+OBJECTS += net/pci.o net/ether.o net/arp.o net/ip.o net/udp.o
 endif
 
 OBJECTS += notlibc.o 
