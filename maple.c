@@ -162,6 +162,8 @@ static struct mapledev *check_pads()
     for(i=0; i<4; i++) {
       unsigned char *r = (unsigned char *)dmabuffer->rbuf[i];
       int fc = (r[6]<<8)|r[7];
+      if(*r == MAPLE_RESPONSE_DEVINFO || *r == MAPLE_RESPONSE_DATATRF)
+	dev[i].present = r[2] & 0x3f;
       if(*r == MAPLE_RESPONSE_DATATRF && r[3]>=3 &&
 	 (fc & (dev[i].xfunc & ~MAPLE_FUNC_LIGHTGUN)) &&
 	 (r[3]>=6 || !(dev[i].xfunc & MAPLE_FUNC_MOUSE))) {
@@ -196,9 +198,12 @@ static struct mapledev *check_pads()
 	    dev[i].cond.mouse.axis5 = dev[i].cond.mouse.axis6 = 
 	    dev[i].cond.mouse.axis7 = dev[i].cond.mouse.axis8 = 0;
 	}	  
-      } else if(*r != 0xff || !dev[i].ttl)
-	dev[i].func = dev[i].xfunc = dev[i].ttl = 0;
-      else
+      } else if(*r == MAPLE_RESPONSE_DEVINFO) {
+	dev[i].ttl = 10;
+      } else if(*r != 0xff || !dev[i].ttl) {
+	dev[i].func = dev[i].xfunc = 0;
+	dev[i].ttl = dev[i].present = 0;
+      } else
 	--dev[i].ttl;
     }
   }

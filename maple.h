@@ -1,5 +1,5 @@
-#ifndef _RONIN_MAPLE_H
-#define _RONIN_MAPLE_H been_here_before
+#ifndef _MAPLE_H
+#define _MAPLE_H been_here_before
 
 /* Maple Bus command and response codes */
 
@@ -50,7 +50,8 @@ struct maple_devinfo {
 
 struct mapledev
 {
-  unsigned int func, xfunc, xcond, ttl;
+  unsigned int func, xfunc, xcond;
+  char ttl, present, dummy1, dummy2;
   union {
     struct {
       unsigned short buttons;
@@ -125,4 +126,4 @@ static __inline void setimask(int m)
   __asm__("ldc %0,sr" : : "r" (sr));
 }
 
-#endif //_RONIN_MAPLE_H
+#endif //_MAPLE_H
