@@ -228,7 +228,11 @@ exc_msg3:
 	.ascii	"%p : %p\n"
 	.byte	0
 		
-	.ds.b	0x300
+	.align	10
+
+mmu_exc:
+	bra	exc_hdler
+	nop
 			
 	.align	9
 
