@@ -180,7 +180,7 @@ void draw_text(int x, int y, int w, unsigned char *text, struct font *font, int 
 
     cw += (c==' '? 5:2);
     x += cw;
-    if(!(w -= cw))
+    if((w -= cw)<=0)
       break;
   }
 #else
