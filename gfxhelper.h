@@ -1,5 +1,5 @@
-#ifndef _GFXHELPER_H
-#define _GFXHELPER_H been_here_before
+#ifndef _RONIN_GFXHELPER_H
+#define _RONIN_GFXHELPER_H been_here_before
 
 #include "common.h"
 
@@ -24,4 +24,4 @@ void paste_pvr_scale_a( struct pvr *i, int x, int y, int x2, int y2,
 void commit_dummy_transpoly();
 END_EXTERN_C
 
-#endif /* _GFXHELPER_H */
+#endif /* _RONIN_GFXHELPER_H */

@@ -1,3 +1,6 @@
+#ifndef _RONIN_SOUNDCOMMON_H
+#define _RONIN_SOUNDCOMMON_H been_here_before
+
 /*
  * This file is included both on ARM and SH
  */
@@ -89,3 +92,5 @@ extern short temp_sound_buffer[];
 #else
 extern signed char temp_sound_buffer[];
 #endif
+
+#endif /* _RONIN_SOUNDCOMMON_H */

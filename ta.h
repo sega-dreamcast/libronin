@@ -1,5 +1,5 @@
-#ifndef _TA_H
-#define _TA_H been_here_before
+#ifndef _RONIN_TA_H
+#define _RONIN_TA_H been_here_before
 
 /* 
  * Functions for accessing the tile accellerator.
@@ -226,4 +226,4 @@ extern struct ta_buffers {
   void *fb_base;
 } ta_buffers[2];
 
-#endif //_TA_H
+#endif //_RONIN_TA_H

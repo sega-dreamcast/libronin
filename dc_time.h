@@ -1,5 +1,5 @@
-#ifndef _DC_TIME_H
-#define _DC_TIME_H been_here_before
+#ifndef _RONIN_DC_TIME_H
+#define _RONIN_DC_TIME_H been_here_before
 
 /*
  * Time and timer-related functions.
@@ -14,4 +14,4 @@ unsigned long Timer( );
 void usleep( unsigned int usecs );
 END_EXTERN_C
 
-#endif //_DC_TIME_H
+#endif //_RONIN_DC_TIME_H

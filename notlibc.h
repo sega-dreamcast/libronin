@@ -1,5 +1,5 @@
-#ifndef _NOTLIBC_H
-#define _NOTLIBC_H been_here_before
+#ifndef _RONIN_NOTLIBC_H
+#define _RONIN_NOTLIBC_H been_here_before
 
 /*
  * Functions used to make life easier when there is no full featured
@@ -38,4 +38,4 @@ int mallopt(int cmd, int value);
 
 END_EXTERN_C
 
-#endif //_NOTLIBC_H
+#endif //_RONIN_NOTLIBC_H

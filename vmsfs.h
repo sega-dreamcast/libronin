@@ -1,5 +1,5 @@
-#ifndef _VMSFS_H
-#define _VMSFS_H been_here_before
+#ifndef _RONIN_VMSFS_H
+#define _RONIN_VMSFS_H been_here_before
 /*
  * VMS fs
  */
@@ -112,4 +112,4 @@ extern int vmsfs_errno;
 END_EXTERN_C
 
 
-#endif //_VMSFS_H
+#endif //_RONIN_VMSFS_H

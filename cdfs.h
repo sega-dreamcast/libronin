@@ -1,5 +1,5 @@
-#ifndef _CDFS_H
-#define _CDFS_H been_here_before
+#ifndef _RONIN_CDFS_H
+#define _RONIN_CDFS_H been_here_before
 /*
  * ISO 9660 fs 
  */
@@ -60,4 +60,4 @@ int stop_cdda(void);
 struct TOC *cdfs_gettoc(void);
 END_EXTERN_C
 
-#endif //_CDFS_H
+#endif //_RONIN_CDFS_H

@@ -1,5 +1,5 @@
-#ifndef _GTEXT_H
-#define _GTEXT_H been_here_before
+#ifndef _RONIN_GTEXT_H
+#define _RONIN_GTEXT_H been_here_before
 
 #include "common.h"
 
@@ -22,4 +22,4 @@ int text_width(unsigned char *text, struct font *font);
 void display_font(struct font *font);
 END_EXTERN_C
 
-#endif /* _GTEXT_H */
+#endif /* _RONIN_GTEXT_H */

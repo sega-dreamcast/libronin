@@ -1,5 +1,5 @@
-#ifndef _REPORT_H
-#define _REPORT_H been_here_before
+#ifndef _RONIN_REPORT_H
+#define _RONIN_REPORT_H been_here_before
 
 /*
  * Functions used for debug output through the serial
@@ -13,4 +13,4 @@ void reportf(const char *fmt, ...);
 char *itoa(int x);
 END_EXTERN_C
 
-#endif //_REPORT_H
+#endif //_RONIN_REPORT_H

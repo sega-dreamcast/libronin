@@ -1,3 +1,6 @@
+#ifndef _RONIN_SOUND_H
+#define _RONIN_SOUND_H been_here_before
+
 /*
  * Sound
  */
@@ -32,4 +35,4 @@ void start_sound();
 END_EXTERN_C
 
 
-
+#endif /* _RONIN_SOUNDCOMMON_H */

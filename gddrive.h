@@ -1,5 +1,5 @@
-#ifndef _GDDRIVE_H
-#define _GDDRIVE_H been_here_before
+#ifndef _RONIN_GDDRIVE_H
+#define _RONIN_GDDRIVE_H been_here_before
 
 #include "common.h"
 
@@ -25,4 +25,4 @@ void gdGdcReset();
 int gdGdcChangeDataType(unsigned int *format);
 END_EXTERN_C
 
-#endif /* _GDDRIVE_H */
+#endif /* _RONIN_GDDRIVE_H */

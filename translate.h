@@ -1,5 +1,5 @@
-#ifndef _TRANSLATE_H
-#define _TRANSLATE_H been_here_before
+#ifndef _RONIN_TRANSLATE_H
+#define _RONIN_TRANSLATE_H been_here_before
 
 #include "common.h"
 
@@ -20,4 +20,4 @@ END_EXTERN_C
 
 #define _(X)   ___translate( X, current_language )
 
-#endif /* _TRANSLATE_H */
+#endif /* _RONIN_TRANSLATE_H */

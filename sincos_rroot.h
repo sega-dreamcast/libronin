@@ -1,5 +1,5 @@
-#ifndef _SINCOS_RROOT_H
-#define _SINCOS_RROOT_H been_here_before
+#ifndef _RONIN_SINCOS_RROOT_H
+#define _RONIN_SINCOS_RROOT_H been_here_before
 
 /* Macros to support the undocumented sh4 instructions FSCA and FSRRA */
 
@@ -17,4 +17,4 @@
   __asm__("fmov %1,fr0; .word 0xf07d; fmov fr0,%0" \
           : "=f" (dst_) : "f" (src_) : "fr0")
 
-#endif /* _SINCOS_RROOT_H */
+#endif /* _RONIN_SINCOS_RROOT_H */

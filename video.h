@@ -1,7 +1,7 @@
-#ifndef _VIDEO_H
-#define _VIDEO_H been_here_before
+#ifndef _RONIN_VIDEO_H
+#define _RONIN_VIDEO_H been_here_before
 
-/* 
+x/* 
  * Functions used to setup and operate on the framebuffer and tile
  * accellerator.
  */
@@ -91,4 +91,4 @@ struct _fb_devconfig{
 };
 extern struct _fb_devconfig fb_devconfig;
 
-#endif //_VIDEO_H
+#endif //_RONIN_VIDEO_H

@@ -1,5 +1,5 @@
-#ifndef _MAPLE_H
-#define _MAPLE_H been_here_before
+#ifndef _RONIN_MAPLE_H
+#define _RONIN_MAPLE_H been_here_before
 
 /* Maple Bus command and response codes */
 
@@ -125,4 +125,4 @@ static __inline void setimask(int m)
   __asm__("ldc %0,sr" : : "r" (sr));
 }
 
-#endif //_MAPLE_H
+#endif //_RONIN_MAPLE_H

@@ -1,5 +1,5 @@
-#ifndef _SERIAL_H
-#define _SERIAL_H been_here_before
+#ifndef _RONIN_SERIAL_H
+#define _RONIN_SERIAL_H been_here_before
 
 /*
  * Funktions for managing the DC serial port. Should not normally be
@@ -16,4 +16,4 @@ int  serial_getc_blocking();
 void serial_flush();
 END_EXTERN_C
 
-#endif //_SERIAL_H
+#endif //_RONIN_SERIAL_H
