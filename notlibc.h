@@ -6,14 +6,15 @@
  * clib available.
  */
 #include <sys/time.h>
+#include <stddef.h>
 #include "common.h"
 START_EXTERN_C
-void exit(int rcode) __THROW __attribute__ ((__noreturn__));
+void exit(int rcode) /*__THROW*/ __attribute__ ((__noreturn__));
 void *malloc(size_t size);
 void free(void *ptr);
 int __offtime(const long int *t, long int offset, struct tm *tp);
 int brk( void *ebdds );
-void *sbrk( int incr );
+void *sbrk( size_t incr );
 END_EXTERN_C
 
 #endif //_NOTLIBC_H

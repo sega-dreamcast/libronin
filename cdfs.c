@@ -276,6 +276,8 @@ static int low_find(unsigned int sec, unsigned int dirlen, int isdir,
 
 /* File I/O */
 
+#define MIN_FD 3
+
 static struct {
   unsigned int sec0;
   unsigned int loc;
@@ -283,7 +285,7 @@ static struct {
   int async;
 } fh[MAX_OPEN_FILES];
 
-int open(const char *path, int oflag)
+int open(const char *path, int oflag, ...)
 {
   int fd, r;
   unsigned int sec, len;
@@ -314,34 +316,34 @@ int open(const char *path, int oflag)
   fh[fd].loc = 0;
   fh[fd].len = len;
   fh[fd].async = -1;
-  return fd;
+  return fd+MIN_FD;
 }
 
 int close(int fd)
 {
-  if(fd<0 || fd>=MAX_OPEN_FILES)
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD)
     return ERR_PARAM;
-  fh[fd].sec0 = 0;
+  fh[fd-MIN_FD].sec0 = 0;
   return 0;
 }
 
 int file_size( int fd ) /* hm */
 {
-  if(fd<0 || fd>=MAX_OPEN_FILES) return -1;
-  return fh[fd].len;
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD) return -1;
+  return fh[fd-MIN_FD].len;
 }
 
 int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset)
 {
   int r, t;
-  if(fd<0 || fd>=MAX_OPEN_FILES)
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD)
     return ERR_PARAM;
-  if(offset>=fh[fd].len)
+  if(offset>=fh[fd-MIN_FD].len)
     return 0;
-  if(offset+nbyte > fh[fd].len)
-    nbyte = fh[fd].len - offset;
+  if(offset+nbyte > fh[fd-MIN_FD].len)
+    nbyte = fh[fd-MIN_FD].len - offset;
   if(nbyte>=2048 && !(offset & 2047))
-    if((r = read_sectors(buf, fh[fd].sec0 + (offset>>11), nbyte>>11)))
+    if((r = read_sectors(buf, fh[fd-MIN_FD].sec0 + (offset>>11), nbyte>>11)))
       return r;
     else {
       t = nbyte & ~2047;;
@@ -367,7 +369,8 @@ int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset)
     else
       t += r;
   } else {
-    if((r = read_sectors((char *)sector_buffer[0], fh[fd].sec0+(offset>>11), 1)))
+    if((r = read_sectors((char *)sector_buffer[0],
+			 fh[fd-MIN_FD].sec0+(offset>>11), 1)))
       return r;
     memcpy(buf, ((char *)sector_buffer[0])+(offset&2047), nbyte);
     t += nbyte;
@@ -377,27 +380,27 @@ int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset)
 
 int read(int fd, void *buf, unsigned int nbyte)
 {
-  if(fd<0 || fd>=MAX_OPEN_FILES)
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD)
     return ERR_PARAM;
   else {
-    int r = pread(fd, buf, nbyte, fh[fd].loc);
+    int r = pread(fd, buf, nbyte, fh[fd-MIN_FD].loc);
     if(r>0)
-      fh[fd].loc += r;
+      fh[fd-MIN_FD].loc += r;
     return r;
   };
 }
 
 long int lseek(int fd, long int offset, int whence)
 {
-  if(fd<0 || fd>=MAX_OPEN_FILES)
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD)
     return ERR_PARAM;
   switch(whence) {
    case SEEK_SET:
-     return fh[fd].loc = offset;
+     return fh[fd-MIN_FD].loc = offset;
    case SEEK_CUR:
-     return fh[fd].loc += offset;
+     return fh[fd-MIN_FD].loc += offset;
    case SEEK_END:
-     return fh[fd].loc = fh[fd].len + offset;
+     return fh[fd-MIN_FD].loc = fh[fd-MIN_FD].len + offset;
    default:
      return ERR_PARAM;
   }
@@ -407,14 +410,16 @@ long int lseek(int fd, long int offset, int whence)
 
 int asynch_read(int fd, void *buf, unsigned int nbyte)
 {
-  if(fd<0 || fd>=MAX_OPEN_FILES || (fh[fd].loc & 2047) || (nbyte & 2047))
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD ||
+     (fh[fd-MIN_FD].loc & 2047) || (nbyte & 2047))
     return ERR_PARAM;
+  fd -= MIN_FD;
   if(fh[fd].loc + nbyte > ((fh[fd].len+2047)&~2047))
     return ERR_PARAM;
   if( fh[fd].async != -1 )
     return ERR_PARAM;
   fh[fd].async = read_sectors_async(buf, fh[fd].sec0 + (fh[fd].loc>>11),
-				     nbyte>>11);
+				    nbyte>>11);
   fh[fd].loc += nbyte;
   return 0;
 }
@@ -422,22 +427,22 @@ int asynch_read(int fd, void *buf, unsigned int nbyte)
 int async_check(int fd)
 {
   int n;
-  if(fd<0 || fd>=MAX_OPEN_FILES || fh[fd].async == -1)
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD || fh[fd-MIN_FD].async == -1)
     return ERR_PARAM;
-  n = check_cmd(fh[fd].async);
+  n = check_cmd(fh[fd-MIN_FD].async);
   if(n)
-    fh[fd].async = -1;
+    fh[fd-MIN_FD].async = -1;
   return n;
 }
 
 int async_wait(int fd)
 {
   int n;
-  if(fd<0 || fd>=MAX_OPEN_FILES || fh[fd].async == -1)
+  if(fd<MIN_FD || fd>=MAX_OPEN_FILES+MIN_FD || fh[fd-MIN_FD].async == -1)
     return ERR_PARAM;
-  n = wait_cmd(fh[fd].async);
+  n = wait_cmd(fh[fd-MIN_FD].async);
   if(n>0)
-    fh[fd].async = -1;
+    fh[fd-MIN_FD].async = -1;
   return n;
 }
 

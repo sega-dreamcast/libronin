@@ -9,13 +9,16 @@
 //#include <stddef.h>   /* for size_t */
 //#include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include "common.h"
 #include "dc_time.h"
 #include "notlibc.h"
 #include "report.h"
+#include "cdfs.h"
 
 int errno = 0;
 
+#if 0
 void _Console_Getc( char c )
 {
 }
@@ -23,16 +26,20 @@ void _Console_Getc( char c )
 void _Console_Putc( char c )
 {
 }
+#endif
 
 void exit(int rcode);
 
 /* Stuff needed to make the binary smaller (some 2Mb or so...)
    remember to link in libronin before libc and libgcc to avoid
    multiple definition conflicts. */
+#if 0
 static FILE _stderr;
 FILE *stderr = &_stderr;
+#endif
 int atexit(void (*function)(void)){ return 0; }
 void abort(){ report("aborted\n"); exit(1); }
+#if 0
 int sprintf(char *str, const char *format, ...)
  {report("sprintf ignored\n");return 0;}
 int fprintf(FILE *stream,  const  char  *format, ...)
@@ -43,8 +50,25 @@ int __write(){report("__write ignored\n"); return -1;}
 FILE *fopen(const char *f, const char *m){report("fopen ignored\n"); return 0;}
 int __isnan(){} //Expect warning.
 void __assert_fail(char *message){report("__asser_fail ignored\n");}
+#endif
 void __main(){}
 void matherr( void *exp ){report("matherr ignored\n");}
+
+
+int _read (int file, char *ptr, int len) { return read(file, ptr, len); }
+int _lseek (int file, int ptr, int dir) { return lseek(file, ptr, dir); }
+int _write ( int file, char *ptr, int len) {
+  int n=len;
+  if(file!=1 && file!=2) return -1;
+  while(n-->0) serial_putc(*ptr++);
+  return len;
+}
+int _close (int file) { return close(file); }
+caddr_t _sbrk (int incr) { return sbrk(incr); }
+int _open (const char *path, int flags) { return open(path, flags, 0); }
+int _fstat (int file, struct stat *st) { st->st_mode = S_IFCHR; return 0; }
+int isatty (int fd) { return fd>=0 && fd<=2; }
+
 
 /* Real implementations of functions normally found in libc */
 void exit(int rcode)
@@ -81,7 +105,7 @@ int brk( void *ebdds )
     return -1;
 }
 
-void *sbrk( int incr )
+void *sbrk( size_t incr )
 {
   int prior_break = end_break;
   int newend_break = prior_break + incr;

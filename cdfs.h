@@ -20,14 +20,14 @@ typedef struct dirent {
 } dirent_t;
 
 #define O_RDONLY 0
-#define O_DIR    1
+#define O_DIR    4
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
 
 START_EXTERN_C
-int open(const char *path, int oflag);
+int open(const char *path, int oflag, ...);
 int close(int fd);
 int pread(int fd, void *buf, unsigned int nbyte, unsigned int offset);
 int read(int fd, void *buf, unsigned int nbyte);
