@@ -876,3 +876,24 @@ int vmsfs_create_file(struct superblock *super, const char *name,
   }
   return vmsfs_sync_superblock(super) && vmsfs_write_dir_entry(&tmpentry);
 }
+
+int vmsfs_delete_file(struct superblock *super, const char *name)
+{
+  vmsfs_open_dir(super, &tmpiter);
+  if(vmsfs_next_named_dir_entry(&tmpiter, &tmpentry, name)) {
+
+    unsigned int currblk, nextblk;
+    nextblk = tmpentry.entry[2] | (tmpentry.entry[3]<<8);
+    memset(tmpentry.entry, 0, sizeof(tmpentry.entry));
+    while(nextblk != 0xfffa && nextblk != 0xfffc) {
+      currblk = nextblk;
+      nextblk = vmsfs_get_fat(super, currblk);
+      vmsfs_set_fat(super, currblk, 0xfffc);
+    }
+    return vmsfs_write_dir_entry(&tmpentry) && vmsfs_sync_superblock(super);
+
+  }
+
+  vmsfs_errno = VMSFS_EOPEN;
+  return 0;
+}

@@ -108,6 +108,7 @@ int vmsfs_create_file(struct superblock *super, const char *name,
                       const void *icons, const void *eyecatch,
                       const void *data, unsigned long datasize,
                       const struct timestamp *tstamp);
+int vmsfs_delete_file(struct superblock *super, const char *name);
 extern int vmsfs_errno;
 END_EXTERN_C
 
