@@ -235,7 +235,7 @@ arm_sound_code.elf: arm_startup.o arm_sound_code.o
 	arm-elf-gcc $(ARMFLAGS) -Wl,-Ttext,0 -nostdlib -nostartfiles -o $@ $^ -lgcc -lgcc
 
 arm_sound_code.o: arm_sound_code.c soundcommon.h
-	arm-elf-gcc -c -Wall $(ARMFLAGS) -Wundefined   -o $@ $<
+	arm-elf-gcc -c -Wall $(ARMFLAGS) -o $@ $<
 
 arm_startup.o: arm_startup.s
 	arm-elf-as -marm7 -o $@ $<
