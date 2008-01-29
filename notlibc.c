@@ -130,7 +130,7 @@ void exit(int rcode)
 {
   report("Exit called. Exiting to menu.\n");
   /* -3:Slave, -1:Reset, 0|1:Menu */
-  (*(void(**)())0x8c0000e0)(-3);
+  (*(void(**)())0x8c0000e0)(1);
   for(;;);
 }
 
