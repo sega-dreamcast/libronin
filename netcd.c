@@ -138,7 +138,7 @@ EXTERN_C int read(int fd, void *buf, unsigned int len)
   return (res>=0? res+tot : res);
 }
 
-EXTERN_C int pread(int fd, void *buf, unsigned int len, unsigned int offset)
+EXTERN_C int pread(int fd, void *buf, unsigned int len, long offset)
 {
   struct { int fd, pos, len; } cmd;
   int res, tot=0;
