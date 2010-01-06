@@ -21,7 +21,7 @@ static int ous_have;
 #define VMSFS_EOPEN    3  /* Failed to open file */
 
 #define VMSFS_ETRUNK   4  /* Out of blocks while writing. File trunkated. */
-#define VMSFS_EBLOCK   5  /* Failed to write block */
+#define VMSFS_EBLOCK   5  /* Failed to write block  FIXME: Unused? */
 #define VMSFS_EWRITE   6  /* Failed to write block @[ous_want] in write */ 
 
 #define VMSFS_ENODIR   7  /* Failed to locate a free dir entry */
