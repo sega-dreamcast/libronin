@@ -15,6 +15,9 @@
 //#include "cdfs.h"
 #include "ta.h"
 
+#ifdef VMUCOMPRESS
+#include "zlib.h"
+#endif
 
 #define SRAMSIZE 8192
 
@@ -182,6 +185,26 @@ int write_sram( unsigned char *data, int size )
   tstamp.wkday = (tm.tm_wday+6)%7;
   vmsfs_beep(&info, 1);
 
+  usleep(50000);  //Might not be needed, but I'm covering my tracks in 
+                  //lack of real review and testing right now.
+
+#ifdef VMUCOMPRESS
+  /* destination buffer must be at least 0.1% larger than
+     sourceLen plus 12 bytes.  (0x20000*1.01+13) */
+  Byte *compr = (Byte *)malloc(0x25000);
+  uLong comprlen = 10000*sizeof(int); /* don't overflow on MSDOS */
+  int err;
+  
+  err = compress2(compr, &comprlen, (const Bytef*)data, size, 1);
+  
+  if(err == Z_OK) {
+    size = (int)comprlen;
+    data = (unsigned char *)compr;
+    reportf("compress successful, new size: %d\n", size);
+  } else
+    reportf("compress error: %d  Saving uncompressed\n", err);
+#endif
+
   if(!vmsfs_create_file(&super, "vmsfschk.tmp", &header, icondata, 
                         NULL, data, size, &tstamp))
   {
@@ -191,8 +214,15 @@ int write_sram( unsigned char *data, int size )
       status_vmu_message = vmsfs_describe_error();
     reportf("%s\n", status_vmu_message);
     gwrite(status_vmu_message, C_RED);
+    vmsfs_beep(&info, 0);
     return 0;
   }
+  vmsfs_beep(&info, 0);
+
+#ifdef VMUCOMPRESS
+  free(compr);
+#endif
+
   return 1;
 }
 
@@ -200,6 +230,11 @@ int restore_sram( )
 {
   int i;
   unsigned int cards = 0;
+#ifdef VMUCOMPRESS
+  int err;
+  uLong uncomprlen;
+  char *comprtmp;
+#endif
 
   memset( RESTOREDRAM, 0xaa, SRAMSIZE );
 
@@ -243,6 +278,18 @@ int restore_sram( )
         sram_save_unit = i;
         reportf("Save unit is %d\n\n", i);
         gwrite("File restored.", C_GREEN);
+
+#ifdef VMUCOMPRESS
+	comprtmp = malloc(0x30000);
+	err = uncompress(comprtmp, &uncomprlen, SRAM, file.size);
+
+	if(err == Z_OK) {
+	  memcpy(RESTOREDRAM, comprtmp, uncomprlen);
+	  reportf("uncompress successful to %d bytes\n", (int)uncomprlen);
+	} else
+	  reportf("uncompress error: %d, loading as uncompressed\n", err);
+#endif
+	
 	return 1;
       }
     }
@@ -309,6 +356,7 @@ int main(int argc, char **argv)
         if(RESTOREDRAM[x] != i) {
           reportf("\nVerification failed at count %d!\n", x);
           gwrite("Verification failed.", C_RED);
+	  gwrite(itoa(x), C_RED);
           break;
         } else if(x==(SRAMSIZE-1)) {
           report("\nVerification successfull. A-OK!\n");
