@@ -109,7 +109,9 @@ int _close (int file) { return close(file); }
 caddr_t _sbrk (int incr) { return sbrk(incr); }
 int _open (const char *path, int flags, ...) { return open(path, flags, 0); }
 int _fstat (int file, struct stat *st) { st->st_mode = S_IFCHR; return 0; }
-int isatty (int fd) { return fd>=0 && fd<=2; }
+int _isatty (int fd) { return fd>=0 && fd<=2; }
+int isatty (int fd) __attribute__((weak));
+int isatty (int fd) { return _isatty(fd); }
 int _fcntl(int fildes, int cmd, ...)
 {
   switch(cmd) {
