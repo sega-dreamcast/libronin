@@ -551,10 +551,17 @@ int vmsfs_next_dir_entry(struct dir_iterator *i, struct dir_entry *d)
   return 1;
 }
 
+int vmsfs_default_name_compare_function(const unsigned char *entryname, const char *findname)
+{
+  return !strncmp((const char *)entryname, findname, 12);
+}
+
+vmsfs_name_compare_function_t *vmsfs_name_compare_function = vmsfs_default_name_compare_function;
+
 int vmsfs_next_named_dir_entry(struct dir_iterator *i, struct dir_entry *d, const char *name)
 {
   while(vmsfs_next_dir_entry(i, d))
-    if(d->entry[0] && !strncmp(d->entry+4, name, 12))
+    if(d->entry[0] && vmsfs_name_compare_function(d->entry+4, name))
       return 1;
   return 0;
 }
@@ -776,7 +783,7 @@ int vmsfs_create_file(struct superblock *super, const char *name,
     tmpentry.entry[2] = 0xfa;
     tmpentry.entry[3] = 0xff;
     memset(tmpentry.entry+4, 0, 12);
-    strncpy(tmpentry.entry+4, name, 12);
+    strncpy((char *)tmpentry.entry+4, name, 12);
   }
   tmpentry.entry[0] = 0x33;
   tmpentry.entry[1] = 0x00;

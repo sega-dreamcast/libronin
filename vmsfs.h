@@ -110,6 +110,11 @@ int vmsfs_create_file(struct superblock *super, const char *name,
                       const struct timestamp *tstamp);
 int vmsfs_delete_file(struct superblock *super, const char *name);
 extern int vmsfs_errno;
+
+typedef int vmsfs_name_compare_function_t(const unsigned char *, const char *);
+extern vmsfs_name_compare_function_t vmsfs_default_name_compare_function;
+extern vmsfs_name_compare_function_t *vmsfs_name_compare_function;
+
 END_EXTERN_C
 
 
