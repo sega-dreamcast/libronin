@@ -312,6 +312,14 @@ int_message:
 	.byte	0
 	
 
+	.data
+
+	.global ___dso_handle
+	.weak ___dso_handle
+___dso_handle:
+	.long   0
+
+
 	.end
 
 
